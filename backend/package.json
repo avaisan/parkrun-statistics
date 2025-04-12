@@ -1,0 +1,36 @@
+{
+  "name": "parkrun-statistics",
+  "version": "1.0.0",
+  "description": "Scraper for ParkRun statistics",
+  "main": "build/index.js",
+  "type": "module",
+  "author": "Antti Väisänen",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "dev": "node --loader ts-node/esm src/index.ts",
+    "serve": "node --loader ts-node/esm src/server.ts",
+    "db:reset": "docker-compose down -v && docker-compose up -d && npx prisma migrate reset --force",
+    "db:migrate": "npx prisma migrate dev",
+    "db:studio": "npx prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "axios": "^1.8.4",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "csv-writer": "^1.6.0",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/cheerio": "^0.22.35",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/jquery": "^3.5.32",
+    "@types/node": "^20.4.0",
+    "prisma": "^6.6.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.2.2"
+  }
+}
