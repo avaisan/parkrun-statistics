@@ -51,17 +51,7 @@ export const PARKRUN_EVENTS_PER_COUNTRY = {
         baseUrl: "https://www.parkrun.dk",
         country: "Denmark",
         events: [
-            "amagerstrandpark",
-            "faelledparken",
-            "amager",
-            "damhusengen",
-            "esbjerg",
-            "vejen",
-            "bygholm",
-            "fuglsangso",
-            "brabrand",
-            "nordrefaelled",
-            "nibe"
+            "amagerstrandpark"
         ]
     }
 };
