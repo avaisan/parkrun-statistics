@@ -7,18 +7,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "types": ["node"],
-    "typeRoots": ["./node_modules/@types"]
+    "resolveJsonModule": true
   },
-  "include": [
-    "src/**/*.ts",
-    "api/src/**/*.ts",
-    "scraper/src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "build",
-    "cdk"
-  ]
+  "exclude": ["node_modules", "build"]
 }

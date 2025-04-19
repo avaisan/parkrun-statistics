@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export const handler: APIGatewayProxyHandler = async (event) => {
+export const handler: APIGatewayProxyHandler = async () => {
   try {
     const stats = await prisma.eventQuarterlyStats.findMany({
       orderBy: [
@@ -21,10 +21,10 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       },
       body: JSON.stringify(stats)
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to fetch statistics' })
+      body: JSON.stringify({ error: 'Failed to fetch statistics: ' + error }),
     };
   }
 };

@@ -4,7 +4,8 @@ import {
   Paper, TableSortLabel, Select, MenuItem, FormControl, InputLabel,
   Stack, Tooltip, Link
 } from '@mui/material';
-import { QuarterlyStats, CountryCode } from '../types';
+import { QuarterlyStats, CountryCode } from '../types.js';
+import { formatTime } from '../services/time_format.js';
 
 interface StatsTableProps {
   data: QuarterlyStats[];
@@ -207,10 +208,10 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                 </TableCell>
                 <TableCell>{row.eventCountry}</TableCell>
                 <TableCell>{`${row.year} Q${row.quarter}`}</TableCell>
-                <TableCell>{row.fastest_time.toFixed(2)}</TableCell>
-                <TableCell>{row.fastest_quartile.toFixed(2)}</TableCell>
-                <TableCell>{row.avg_finish_time.toFixed(2)}</TableCell>
-                <TableCell>{row.slowest_quartile.toFixed(2)}</TableCell>
+                <TableCell>{formatTime(row.fastest_time)}</TableCell>
+                <TableCell>{formatTime(row.fastest_quartile)}</TableCell>
+                <TableCell>{formatTime(row.avg_finish_time)}</TableCell>
+                <TableCell>{formatTime(row.slowest_quartile)}</TableCell>
                 <TableCell>{Math.round(row.avg_participants)}</TableCell>
               </TableRow>
             ))}

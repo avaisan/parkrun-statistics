@@ -1,4 +1,4 @@
-interface CountryConfig {
+interface ICountry {
     baseUrl: string;
     country: string;
     events: string[];
@@ -6,7 +6,7 @@ interface CountryConfig {
 
 export type CountryCode = keyof typeof PARKRUN_EVENTS_PER_COUNTRY;
 
-export const PARKRUN_EVENTS_PER_COUNTRY: Record<string, CountryConfig> = {
+export const PARKRUN_EVENTS_PER_COUNTRY: Record<string, ICountry> = {
     FI: {
         baseUrl: "https://www.parkrun.fi",
         country: "Finland",

@@ -2,27 +2,32 @@ import { useEffect, useState } from 'react';
 import { Container, Typography, Box, Paper, Stack, Link } from '@mui/material';
 import { StatsTable } from './components/StatsTable';
 import { QuarterlyStats } from './types';
-import { getQuarterlyStats } from './services/api';
+import { getQuarterlyStats, getLatestUpdateDate } from './services/api';
 
 function App() {
     const [stats, setStats] = useState<QuarterlyStats[]>([]);
+    const [latestUpdate, setLatestUpdate] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchData = async () => {
             try {
-                const data = await getQuarterlyStats();
-                setStats(data);
+                const [statsData, latestDate] = await Promise.all([
+                    getQuarterlyStats(),
+                    getLatestUpdateDate()
+                ]);
+                setStats(statsData);
+                setLatestUpdate(latestDate);
             } catch (err) {
-                setError('Failed to fetch statistics');
+                setError('Failed to fetch data');
                 console.error(err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchStats();
+        fetchData();
     }, []);
 
     if (loading) return <Typography>Loading...</Typography>;
@@ -41,7 +46,8 @@ function App() {
                 <Box 
                     sx={{ 
                         display: 'flex', 
-                        alignItems: 'center', 
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
                         gap: 2, 
                         mb: 4,
                         borderBottom: 1,
@@ -49,20 +55,31 @@ function App() {
                         pb: 2
                     }}
                 >
-                    <img 
-                        src="/parkrun_logo.png" 
-                        alt="ParkRun Logo" 
-                        style={{ 
-                            height: '50px',
-                            width: 'auto'
-                        }} 
-                    />
-                    <Typography 
-                        variant="h4" 
-                        component="h1"
-                    >
-                        ParkRun Nordic Statistics
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <img 
+                            src="/parkrun_logo.png" 
+                            alt="ParkRun Logo" 
+                            style={{ 
+                                height: '50px',
+                                width: 'auto'
+                            }} 
+                        />
+                        <Typography 
+                            variant="h4" 
+                            component="h1"
+                        >
+                            ParkRun Nordic Statistics
+                        </Typography>
+                    </Box>
+                    {latestUpdate && (
+                        <Typography variant="body2" color="text.secondary">
+                            Last updated: {new Intl.DateTimeFormat('fi-FI', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric'
+                            }).format(new Date(latestUpdate))}
+                        </Typography>
+                    )}
                 </Box>
 
                 <Stack spacing={2} sx={{ mb: 4 }}>

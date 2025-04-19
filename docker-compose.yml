@@ -22,6 +22,7 @@ services:
     environment:
       DATABASE_URL: postgresql://parkrun:parkrun@postgres:5432/parkrun?schema=public
       NODE_ENV: development
+      PORT: 3001
     volumes:
       - ./backend:/app
       - /app/node_modules

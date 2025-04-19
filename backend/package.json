@@ -1,25 +1,19 @@
 {
-  "name": "parkrun-statistics",
+  "name": "@parkrun/backend",
   "version": "1.0.0",
-  "description": "Backend for ParkRun statistics web app",
   "type": "module",
-  "author": "Antti Väisänen",
-  "license": "MIT",
   "scripts": {
+    "build": "npm run build:api && npm run build:scraper",
     "build:api": "tsc -p tsconfig.api.json",
     "build:scraper": "tsc -p tsconfig.scraper.json",
-    "build": "npm run build:api && npm run build:scraper",
-    "package:api": "npm run build:api && cd build/api && npm prune --production && zip -r ../../api.zip .",
-    "package:scraper": "npm run build:scraper && cd build/scraper && npm prune --production && zip -r ../../scraper.zip .",
-    "package": "npm run package:api && npm run package:scraper",
-    "dev:scraper": "node --loader ts-node/esm scraper/src/index.ts",
+    "package:lambda": "npm run build:api && cd build/api && npm prune --production && zip -r ../../api.zip .",
     "dev:api": "node --loader ts-node/esm api/src/server.ts",
-    "db:reset": "docker-compose down -v && docker-compose up -d && npx prisma migrate reset --force",
+    "dev:api:local": "docker-compose up api postgres",
+    "dev:scraper": "node --loader ts-node/esm scraper/src/index.ts",
     "db:migrate": "npx prisma migrate dev",
+    "db:reset": "docker-compose down -v && docker-compose up -d postgres && npx prisma migrate reset --force",
     "db:studio": "npx prisma studio",
-    "docker:dev": "docker-compose up",
-    "docker:down": "docker-compose down",
-    "docker:clean": "docker-compose down -v"
+    "docker:down": "docker-compose down"
   },
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.787.0",
@@ -32,16 +26,11 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.136",
-    "@types/cheerio": "^0.22.35",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/node": "^20.17.30",
     "prisma": "^6.6.0",
     "ts-node": "^10.9.0",
-    "typescript": "^5.2.2"
-  },
-  "ts-node": {
-    "esm": true,
-    "experimentalSpecifierResolution": "node"
+    "typescript": "^5.8.3"
   }
 }

@@ -1,0 +1,34 @@
+# Version control
+.git/
+.gitignore
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# CDK
+cdk.out/
+.cdk.staging/
+cdk-outputs.json
+
+# Build outputs
+**/dist/
+**/build/
+**/.vite/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Editor files
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+
+# Documentation
+*.md
+LICENSE

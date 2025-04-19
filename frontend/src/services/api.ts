@@ -10,3 +10,13 @@ export const getQuarterlyStats = async (): Promise<QuarterlyStats[]> => {
         throw error;
     }
 };
+
+export const getLatestUpdateDate = async (): Promise<string> => {
+    try {
+        const response = await axios.get('/stats/latest-date');
+        return response.data.eventDate;
+    } catch (error) {
+        console.error('Error fetching latest update date:', error);
+        throw error;
+    }
+};

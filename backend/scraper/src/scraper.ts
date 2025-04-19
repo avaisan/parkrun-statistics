@@ -1,10 +1,6 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
-import { IEventResult, IEventHistory } from "./types.js";
 import { PARKRUN_EVENTS_PER_COUNTRY, CountryCode } from "./events.js";
-import { config } from "process";
-
-export { getHistoryofEvents, getEventResults }
 
 const HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -13,7 +9,20 @@ const HEADERS = {
     'Connection': 'keep-alive',
 };
 
-async function getHistoryofEvents(countryCode: CountryCode, eventName: string, fromDate: Date): Promise<IEventHistory[]> {
+interface IEventHistory {
+    eventId: number;
+    date: string;
+}
+
+export interface IEventResult {
+    eventCountry: string
+    eventName: string;
+    eventId: number;
+    eventDate: string;
+    finishTimes: number[];
+}
+
+export async function getHistoryofEvents(countryCode: CountryCode, eventName: string, fromDate: Date): Promise<IEventHistory[]> {
     /*
     * Fetches the event history for a given event name.
     * Returns an array of event history entries.
@@ -53,7 +62,7 @@ async function getHistoryofEvents(countryCode: CountryCode, eventName: string, f
     }
 }
 
-async function getEventResults(countryCode: CountryCode, eventName: string, eventId: number): Promise<IEventResult | null> {
+export async function getEventResults(countryCode: CountryCode, eventName: string, eventId: number): Promise<IEventResult | null> {
     const config = PARKRUN_EVENTS_PER_COUNTRY[countryCode];
     try {
         const eventUrl = `${config.baseUrl}/${eventName}/results/${eventId}/`;

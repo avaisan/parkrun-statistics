@@ -1,9 +1,9 @@
 import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 import { PrismaClient } from '@prisma/client';
 import { ScheduledEvent } from 'aws-lambda';
-import { getHistoryofEvents, getEventResults } from './scraper';
-import { PARKRUN_EVENTS_PER_COUNTRY, CountryCode } from './events';
-import { saveEventResult } from './save_to_db';
+import { getHistoryofEvents, getEventResults } from './scraper.js';
+import { PARKRUN_EVENTS_PER_COUNTRY, CountryCode } from './events.js';
+import { saveEventResult } from './save_to_db.js';
 
 const secretsManager = new SecretsManagerClient({ region: process.env.AWS_REGION });
 

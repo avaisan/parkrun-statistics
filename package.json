@@ -1,7 +1,16 @@
 {
+  "name": "@parkrun/root",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "cdk"
+  ],
   "scripts": {
-    "build:frontend": "cd frontend && npm run build",
-    "build:backend": "cd backend && npm run build",
-    "deploy": "cd cdk && cdk deploy --all"
+    "build": "npm run build --workspaces",
+    "dev:frontend": "npm run dev -w frontend",
+    "dev:backend": "npm run dev:api -w backend",
+    "dev:scraper": "npm run dev:scraper -w backend",
+    "deploy": "npm run deploy -w cdk"
   }
 }
