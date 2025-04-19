@@ -1,15 +1,15 @@
-FROM node:22-slim
+FROM node:23-slim
 
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y openssl
 COPY package*.json ./
 RUN npm install
+RUN npm install -g tsx
 
-# Copy Prisma schema and generate client
 COPY prisma ./prisma/
 RUN npx prisma generate
 
 COPY . .
 
-CMD ["npm", "run", "dev:api"]
+CMD ["npm", "run", "api"]

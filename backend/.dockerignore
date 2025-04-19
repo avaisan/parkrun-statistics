@@ -4,3 +4,6 @@ build
 dist
 .env
 .env.*
+.git
+.gitignore
+README.md

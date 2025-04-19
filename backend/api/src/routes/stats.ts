@@ -21,21 +21,4 @@ router.get('/', async (_req: Request, res: Response) => {
     }
 });
 
-router.get('/latest-date', async (_req: Request, res: Response) => {
-    try {
-        const latestDate = await prisma.event.findFirst({
-            orderBy: 
-                { eventDate: 'desc' },
-                select: {
-                    eventDate: true
-                }
-        });
-        
-        res.json(latestDate);
-    } catch (error) {
-        console.error('Error fetching event dates:', error);
-        res.status(500).json({ error: 'Failed to fetch event data' });
-    }
-});
-
 export default router;

@@ -12,5 +12,8 @@
     "dev:backend": "npm run dev:api -w backend",
     "dev:scraper": "npm run dev:scraper -w backend",
     "deploy": "npm run deploy -w cdk"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3"
   }
 }

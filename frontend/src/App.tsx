@@ -1,27 +1,27 @@
 import { useEffect, useState } from 'react';
 import { Container, Typography, Box, Paper, Stack, Link } from '@mui/material';
 import { StatsTable } from './components/StatsTable';
+import { LastUpdated } from './components/LastUpdated';
 import { QuarterlyStats } from './types';
-import { getQuarterlyStats, getLatestUpdateDate } from './services/api';
+import { getQuarterlyStats } from './services/api';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
     const [stats, setStats] = useState<QuarterlyStats[]>([]);
-    const [latestUpdate, setLatestUpdate] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [statsData, latestDate] = await Promise.all([
-                    getQuarterlyStats(),
-                    getLatestUpdateDate()
-                ]);
+                setLoading(true);
+                const statsData = await getQuarterlyStats();
+                if (!statsData) throw new Error('No data received');
                 setStats(statsData);
-                setLatestUpdate(latestDate);
+                setError(null);
             } catch (err) {
-                setError('Failed to fetch data');
-                console.error(err);
+                setError(err instanceof Error ? err.message : 'Failed to fetch data');
+                console.error('Error fetching data:', err);
             } finally {
                 setLoading(false);
             }
@@ -30,8 +30,25 @@ function App() {
         fetchData();
     }, []);
 
-    if (loading) return <Typography>Loading...</Typography>;
-    if (error) return <Typography color="error">{error}</Typography>;
+    if (loading) {
+        return (
+            <Container maxWidth="lg">
+                <Box display="flex" justifyContent="center" mt={4}>
+                    <Typography>Loading...</Typography>
+                </Box>
+            </Container>
+        );
+    }
+
+    if (error) {
+        return (
+            <Container maxWidth="lg">
+                <Box display="flex" justifyContent="center" mt={4}>
+                    <Typography color="error">{error}</Typography>
+                </Box>
+            </Container>
+        );
+    }
 
     return (
         <Container maxWidth="lg">
@@ -40,9 +57,14 @@ function App() {
                 sx={{ 
                     padding: 3,
                     mt: 3,
-                    backgroundColor: 'background.paper' 
+                    backgroundColor: 'background.paper',
+                    position: 'relative'
                 }}
             >
+                <ErrorBoundary>
+                    <LastUpdated />
+                </ErrorBoundary>
+                
                 <Box 
                     sx={{ 
                         display: 'flex', 
@@ -71,15 +93,6 @@ function App() {
                             ParkRun Nordic Statistics
                         </Typography>
                     </Box>
-                    {latestUpdate && (
-                        <Typography variant="body2" color="text.secondary">
-                            Last updated: {new Intl.DateTimeFormat('fi-FI', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric'
-                            }).format(new Date(latestUpdate))}
-                        </Typography>
-                    )}
                 </Box>
 
                 <Stack spacing={2} sx={{ mb: 4 }}>
@@ -109,10 +122,19 @@ function App() {
                     </Typography>
                 </Stack>
 
-                <StatsTable data={stats} />
+                <ErrorBoundary>
+                    <StatsTable data={stats} />
+                </ErrorBoundary>
+                
             </Paper>
         </Container>
     );
 }
 
-export default App;
+export default function FrontendApp() {
+    return (
+        <ErrorBoundary>
+            <App />
+        </ErrorBoundary>
+    );
+}

@@ -1,0 +1,16 @@
+FROM public.ecr.aws/lambda/nodejs:22
+
+WORKDIR /var/task
+
+COPY package*.json ./
+
+RUN npm ci
+
+COPY prisma ./prisma/
+RUN npx prisma generate
+
+COPY . .
+
+RUN npm run build:api
+
+CMD [ "build/api/index.handler" ]

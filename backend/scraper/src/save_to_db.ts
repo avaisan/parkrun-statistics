@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { IEventResult  } from './scraper.js'
+import { IEventResult } from './scraper.js'
 
 const prisma = new PrismaClient()
 
@@ -21,6 +21,6 @@ export async function saveEventResult(eventResult: IEventResult): Promise<void> 
         });
         console.log(`Saved event ${eventResult.eventName} #${eventResult.eventId} to database`);
     } catch (error) {
-        console.log(`Event ${eventResult.eventName} #${eventResult.eventId} already exists (if code P2002) or some other error`, (error as any).code);
+        console.log(`Error code:`, (error as any).code, `<- if P2002, event ${eventResult.eventName} #${eventResult.eventId} already exists.`);
     }
 }
