@@ -79,7 +79,7 @@ export class FrontendStack extends cdk.Stack {
     }));
 
     // Deploy frontend assets
-    new s3deploy.BucketDeployment(this, bucketname, {
+    new s3deploy.BucketDeployment(this, 'parkrun-statistics-s3', {
       sources: [s3deploy.Source.asset('../frontend/dist')],
       destinationBucket: websiteBucket,
       distribution,
