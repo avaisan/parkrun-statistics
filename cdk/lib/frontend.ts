@@ -18,6 +18,7 @@ export class FrontendStack extends cdk.Stack {
 
     // S3 bucket with environment-based naming
     const websiteBucket = new s3.Bucket(this, 'XXXXXXXXXXXXX', {
+      bucketName: `parkrunstats-${props.config.environmentName}-website-${this.account}-${this.region}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       autoDeleteObjects: false,
