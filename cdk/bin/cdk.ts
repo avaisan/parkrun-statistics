@@ -16,30 +16,30 @@ const waf = new WAFStack(app, 'ParkRunWAF', {
   config 
 });
 
-const infra = new InfrastructureStack(app, 'ParkRunInfra', { 
-  config,
-  apiGatewayWebAcl: waf.apiGatewayWebAcl 
+const infra = new InfrastructureStack(app, 'InfrastructureStack', { 
+  config
 });
 
-const database = new DatabaseStack(app, 'ParkRunDatabase', {
+const database = new DatabaseStack(app, 'DatabaseStack', {
   config,
   vpc: infra.vpc,
   bastionHost: infra.bastionHost,
 });
 
-const backend = new BackendStack(app, 'ParkRunBackend', {
+const backend = new BackendStack(app, 'BackendStack', {
   config,
   vpc: infra.vpc,
   cluster: database.cluster,
   webAcl: waf.apiGatewayWebAcl
 });
 
-const frontend = new FrontendStack(app, 'ParkRunFrontend', { 
+const frontend = new FrontendStack(app, 'FrontendStack', { 
   config,
   webAcl: waf.cloudFrontWebAcl 
  });
 
-infra.addDependency(waf);
+
+ //infra.addDependency(waf);
 database.addDependency(infra);
 backend.addDependency(database);
 frontend.addDependency(waf);

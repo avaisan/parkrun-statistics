@@ -13,7 +13,6 @@ export class WAFStack extends cdk.Stack {
     constructor(scope: cdk.App, id: string, props: IWAFStackProps) {
         super(scope, id, props);
       
-      // Move WAF creation logic here
      // WAF for CloudFront (Global)
       this.cloudFrontWebAcl = new wafv2.CfnWebACL(this, 'CloudFrontWebACL', {
         defaultAction: { allow: {} },
