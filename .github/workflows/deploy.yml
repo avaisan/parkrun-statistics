@@ -44,4 +44,4 @@ jobs:
           DATABASE_NAME: parkrun
         run: |
           cd cdk
-          npm run cdk deploy:infra --require-approval never
+          npm run deploy:infra --require-approval never
