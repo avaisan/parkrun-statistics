@@ -16,9 +16,11 @@ export class FrontendStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props: FrontendStackProps) {
     super(scope, id, props);
 
+    const bucketname = `parkrunstats-${props.config.environmentName}-website-${this.account}-${this.region}`;
+
     // S3 bucket with environment-based naming
-    const websiteBucket = new s3.Bucket(this, 'XXXXXXXXXXXXX', {
-      bucketName: `parkrunstats-${props.config.environmentName}-website-${this.account}-${this.region}`,
+    const websiteBucket = new s3.Bucket(this, bucketname, {
+      bucketName: bucketname,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       autoDeleteObjects: false,
@@ -77,7 +79,7 @@ export class FrontendStack extends cdk.Stack {
     }));
 
     // Deploy frontend assets
-    new s3deploy.BucketDeployment(this, 'XXXXXXXXXXXXX', {
+    new s3deploy.BucketDeployment(this, bucketname, {
       sources: [s3deploy.Source.asset('../frontend/dist')],
       destinationBucket: websiteBucket,
       distribution,
