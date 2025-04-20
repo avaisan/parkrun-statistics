@@ -1,10 +1,18 @@
-name: Deploy ParkRun Statistics App
+name: Deploy Infrastructure
 
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'cdk/**'
+      - 'lib/**'
+      - '.github/workflows/deploy-infra.yml'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'cdk/**'
+      - 'lib/**'
+      - '.github/workflows/deploy-infra.yml'
   workflow_dispatch:
 
 permissions:
@@ -12,7 +20,7 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  deploy-infrastructure:
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
     
@@ -31,19 +39,16 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: eu-central-1
           
-      - name: Install Dependencies
+      - name: Install CDK Dependencies
         run: |
+          cd cdk
           npm ci
-          cd frontend && npm ci
-          cd ../backend && npm ci
-          cd ../cdk && npm ci
           
       - name: Deploy Infrastructure
         env:
           ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          ALLOWED_ORIGINS: ""
           DATABASE_NAME: parkrun
         run: |
           cd cdk
-          npm run deploy:infra --require-approval never
+          npm run deploy -- --require-approval never
