@@ -32,6 +32,7 @@ export class DatabaseStack extends cdk.Stack {
       enableDataApi: true,
       iamAuthentication: true,
       enableClusterLevelEnhancedMonitoring: true,
+      monitoringInterval: cdk.Duration.seconds(60)
     });
 
     // Grant access to bastion
