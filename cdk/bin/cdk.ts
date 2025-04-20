@@ -40,8 +40,8 @@ const backend = new BackendStack(app, 'BackendStack', {
 
 
  //infra.addDependency(waf);
-database.addDependency(infra);
-backend.addDependency(database);
+//database.addDependency(infra);
+//backend.addDependency(database);
 //frontend.addDependency(waf);
 
 // Tagging
