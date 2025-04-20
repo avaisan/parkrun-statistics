@@ -51,11 +51,6 @@ test-results/
 .DS_Store
 Thumbs.db
 
-# Package manager files
-**/package-lock.json
-**/yarn.lock
-**/pnpm-lock.yaml
-
 # Database
 **/prisma/migrations/*/
 !**/prisma/migrations/*/*.sql
