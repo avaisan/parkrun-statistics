@@ -1,64 +1,79 @@
 import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as ecr from 'aws-cdk-lib/aws-ecr';
-import * as ecr_assets from 'aws-cdk-lib/aws-ecr-assets';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as events from 'aws-cdk-lib/aws-events';
-import * as targets from 'aws-cdk-lib/aws-events-targets';
-import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as rds from 'aws-cdk-lib/aws-rds';
+import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import { type IStackConfig } from './config';
+
+interface BackendStackProps extends cdk.StackProps {
+  config: IStackConfig;
+  vpc: ec2.Vpc;
+  cluster: rds.DatabaseCluster;
+  webAcl: wafv2.CfnWebACL;
+}
 
 export class BackendStack extends cdk.Stack {
-  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
-    super(scope, id, props);
+  public readonly api: apigateway.RestApi;
 
-    // Create Docker image asset
-    const apiImage = new ecr_assets.DockerImageAsset(this, 'ApiImage', {
-      directory: '../backend', // Directory containing Dockerfile.api
-      file: 'Dockerfile.api',
-    });
+  constructor(scope: cdk.App, id: string, props: BackendStackProps) {
+    super(scope, id, props);
 
     // API Lambda
     const apiHandler = new lambda.DockerImageFunction(this, 'ApiHandler', {
-      code: lambda.DockerImageCode.fromAsset('../backend', {
-      file: 'Dockerfile.api',
-    }),
-    timeout: cdk.Duration.seconds(30),
-    environment: {
-      DATABASE_URL: process.env.DATABASE_URL!,
-    },
-    memorySize: 1024, // Adjust based on your needs
-  });
+      code: lambda.DockerImageCode.fromImageAsset('../backend', {
+        file: 'Dockerfile.api'
+      }),
+      vpc: props.vpc,
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 1024,
+      environment: {
+        CLUSTER_ARN: props.cluster.clusterArn,
+        SECRET_ARN: props.cluster.secret?.secretArn || '',
+        DATABASE_NAME: 'parkrun',
+        NODE_ENV: props.config.environmentName
+      },
+    });
+
+    // Grant Data API access with read-only role
+    apiHandler.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['rds-db:connect'],
+      resources: [`arn:aws:rds-db:${this.region}:${this.account}:dbuser:${props.cluster.clusterIdentifier}/readonly`]
+    }));
+
+    props.cluster.grantDataApiAccess(apiHandler);
 
     // API Gateway
-    const api = new apigateway.RestApi(this, 'ParkrunApi', {
+    this.api = new apigateway.RestApi(this, 'Api', {
+      restApiName: `parkrun-api-${props.config.environmentName}`,
       defaultCorsPreflightOptions: {
-        allowOrigins: ['*'], // Restrict in production
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: ['GET'],
       },
     });
 
-    api.root.addResource('stats')
-      .addMethod('GET', new apigateway.LambdaIntegration(apiHandler));
-
-    // Scraper Lambda
-    const scraperHandler = new lambda.Function(this, 'ScraperHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset('../backend/scraper/dist'),
-      timeout: cdk.Duration.minutes(15),
-      environment: {
-        DATABASE_SECRET_ARN: databaseSecret.secretArn
-      }
+    // Associate WAF with API Gateway stage
+    new wafv2.CfnWebACLAssociation(this, 'ApiGatewayWAFAssociation', {
+      resourceArn: `arn:aws:apigateway:${this.region}::/restapis/${this.api.restApiId}/stages/${this.api.deploymentStage.stageName}`,
+      webAclArn: props.webAcl.attrArn
     });
 
-    // Grant Lambda access to secret
-    databaseSecret.grantRead(scraperHandler);
+    // API routes
+    const stats = this.api.root.addResource('stats');
+    stats.addMethod('GET', new apigateway.LambdaIntegration(apiHandler));
 
-    // Schedule scraper to run weekly on Sunday
-    new events.Rule(this, 'WeeklyScraperSchedule', {
-      schedule: events.Schedule.expression('cron(0 1 ? * SUN *)'),
-      targets: [new targets.LambdaFunction(scraperHandler)]
+    const health = this.api.root.addResource('health');
+    health.addMethod('GET', new apigateway.LambdaIntegration(apiHandler));
+
+    const latestdate = this.api.root.addResource('latest-date');
+    latestdate.addMethod('GET', new apigateway.LambdaIntegration(apiHandler));
+
+    // Output the API URL
+    new cdk.CfnOutput(this, 'ApiUrl', {
+      value: this.api.url,
+      description: 'API Gateway endpoint URL',
     });
   }
 }
