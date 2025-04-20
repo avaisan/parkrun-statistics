@@ -1,5 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as ecr from 'aws-cdk-lib/aws-ecr';
+import * as ecr_assets from 'aws-cdk-lib/aws-ecr-assets';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
@@ -10,23 +12,23 @@ export class BackendStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Create database credentials secret
-    const databaseSecret = new secretsmanager.Secret(this, 'DatabaseCredentials', {
-      secretObjectValue: {
-        DATABASE_URL: cdk.SecretValue.unsafePlainText(process.env.DATABASE_URL!)
-      }
+    // Create Docker image asset
+    const apiImage = new ecr_assets.DockerImageAsset(this, 'ApiImage', {
+      directory: '../backend', // Directory containing Dockerfile.api
+      file: 'Dockerfile.api',
     });
 
     // API Lambda
-    const apiHandler = new lambda.Function(this, 'ApiHandler', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromAsset('../backend/api/dist'),
-      timeout: cdk.Duration.seconds(30),
-      environment: {
-        DATABASE_URL: process.env.DATABASE_URL!,
-      },
-    });
+    const apiHandler = new lambda.DockerImageFunction(this, 'ApiHandler', {
+      code: lambda.DockerImageCode.fromAsset('../backend', {
+      file: 'Dockerfile.api',
+    }),
+    timeout: cdk.Duration.seconds(30),
+    environment: {
+      DATABASE_URL: process.env.DATABASE_URL!,
+    },
+    memorySize: 1024, // Adjust based on your needs
+  });
 
     // API Gateway
     const api = new apigateway.RestApi(this, 'ParkrunApi', {

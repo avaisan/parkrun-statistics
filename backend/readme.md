@@ -1,32 +1,27 @@
 # ParkRun Statistics Backend
 
-A Node.js application that fetches, stores, and serves parkrun results from Nordic countries.
+- Scraper using cheerio to get ParkRun event results from Nordic countries
+- PostgreSQL database for storing results and calculating aggregates
+- API for offering data to frontend
+
+Database and API run in Docker containers and are deployed to AWS. Scraper only runs locally.
 
 ## Prerequisites
 
 - Node.js v22.14.0
-- Docker and Docker Compose
-- PostgreSQL client (optional, for direct database access)
+- Docker
 
 ## Setup
 
 1. Install dependencies:
 ```bash
 npm install
+npm run build
 ```
 
 2. Set up the database:
 ```bash
 # Start PostgreSQL in Docker and apply migrations
-npm run db:reset
-```
-
-## Database Management
-
-### Managing the Database
-
-```bash
-# Reset database (removes all data and recreates tables)
 npm run db:reset
 
 # Apply new migrations only
@@ -41,7 +36,7 @@ npm run db:studio
 - `Event` table: Stores individual parkrun event results with:
   - Event details (ID, name, country, date)
   - Finish times array
-  - Average and fastest finish times
+  - Average and fastest finish times per event
 - `event_quarterly_stats` view: Provides quarterly statistics:
   - Fastest finish time
   - Fast quartile (25th percentile)
@@ -51,29 +46,35 @@ npm run db:studio
 
 ## Running the Application
 
-### Data Collection
-
-With default parameters:
+### Data Collection with scraper
+Ensure that database is up and running.
+If event already exists in database, scraper tries to save but fails and moves on to next.
 ```bash
-# Fetches Finnish events from 2025-01-01 onwards
-npm run dev
-```
+#With default parameters:
+# Fetches events from all Nordic ParkRuns for the last 7 days
+npm run scraper
 
-With custom parameters:
-```bash
+#With custom parameters:
 # Format: npm run dev <countryCode> <fromDate>
-npm run dev FI 2025-03-01
+npm run scraper FI 2025-04-12
 ```
 
 ### API Server
 
 Start the API server:
 ```bash
-npm run serve
+npm run api
 ```
 
+API will be available at `localhost:3001`.
+
 The server provides the following endpoints:
+- `GET /` - Returns info on available endpoints
+- `GET /health` - Returns API and database health (up or down)
 - `GET /api/stats` - Returns quarterly statistics for all events
+- `GET /api/latest-date` - Returns latest available event date
+
+Note: latest date is used in frontend UI to see when data has been refreshed. It might be misleading if data is refreshed only partially.
 
 ### Available Country Codes
 - `FI`: Finland
@@ -81,52 +82,33 @@ The server provides the following endpoints:
 - `NO`: Norway
 - `DK`: Denmark
 
-## Development
+Event names are in `events.ts` file. If events shutdown or new ones are found, that file needs to be updated.
 
-Build the TypeScript code:
+## Local development
+
+1. Install dependencies, generate lock file and build:
 ```bash
+npm install
 npm run build
 ```
+2. Start Docker containers from project root with `docker compose up -d`.
 
-Run the compiled version:
-```bash
-npm start [countryCode] [fromDate]
+Scraper is run locally, API and database runs in containers.
+
+Create up `.env` file to backend folder with db credentials (set these in docker-compose for yourself).
+```
+DATABASE_URL=postgresql://parkrun:parkrun@localhost:5432/parkrun?schema=public
+FRONTEND_URL=http://localhost:5173
+NODE_ENV=development
+PORT=3001 
 ```
 
-## Database Connection
-
-The application connects to PostgreSQL using these default credentials:
-- Host: localhost
-- Port: 5432
-- Database: parkrun
-- Username: parkrun
-- Password: parkrun
-
-To modify the connection settings, update the `DATABASE_URL` in `.env` file:
-```
-DATABASE_URL="postgresql://parkrun:parkrun@localhost:5432/parkrun?schema=public"
-```
 
 ## API Documentation
+API offers root, health and statistics endpoints.
 
 ### GET /api/stats
-
 Returns quarterly statistics for all parkrun events.
-
-Response format:
-```typescript
-interface QuarterlyStats {
-    eventName: string;
-    eventCountry: string;
-    year: number;
-    quarter: number;
-    fastest_time: number;        // Minutes
-    fastest_quartile: number;    // Minutes
-    avg_finish_time: number;     // Minutes
-    slowest_quartile: number;    // Minutes
-    avg_participants: number;
-}
-```
 
 Example response:
 ```json

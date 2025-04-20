@@ -24,7 +24,12 @@ export class FrontendStack extends cdk.Stack {
         {
           httpStatus: 404,
           responseHttpStatus: 200,
-          responsePagePath: '/index.html',
+          responsePagePath: '/404.html',
+        },
+        {
+          httpStatus: 500,
+          responseHttpStatus: 200,
+          responsePagePath: '/500.html',
         },
       ],
     });

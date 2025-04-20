@@ -7,43 +7,31 @@ A React-based frontend application for displaying parkrun statistics from Nordic
 - View quarterly statistics for parkrun events across Nordic countries
 - Filter data by country, year, and quarter
 - Sort data by any column
-- Responsive design with Material-UI components
-- Interactive data visualization
 
 ## Prerequisites
 
 - Node.js v22.14.0 or later
-- npm or yarn package manager
+- Backend and database
 
-## Installation
+## Installation and development
 
-1. Clone the repository
-2. Install dependencies:
+1. Start backend.
+
+2. Install dependencies and build:
 ```bash
-cd frontend
 npm install
+npm run build
 ```
 
-## Development
-
-Start the development server:
+3. Start the server:
 ```bash
-npm run dev
+npm run ui
 ```
 
 The application will be available at `http://localhost:5173`
 
-## Building for Production
-
-Build the application:
-```bash
-npm run build
-```
-
-Preview the production build:
-```bash
-npm run preview
-```
+### Debugging
+- Error boundary: if statistics or latest date fails to render, error boundary catches on and tells more info on what is failing.
 
 ## Project Structure
 
@@ -54,40 +42,22 @@ frontend/
 ├── src/
 │   ├── components/     # React components
 │   │   └── StatsTable.tsx
-│   ├── services/      # API services
+│   │   └── LastUpdated.tsx
+│   │   └── ErrorBoundary.tsx
+│   ├── services/
 │   │   └── api.ts
-│   ├── types/         # TypeScript type definitions
-│   │   └── index.ts
+│   │   └── time_format.ts # The only "calculation" done in UI.
 │   ├── App.tsx        # Main application component
 │   ├── main.tsx       # Application entry point
 │   └── theme.ts       # Material-UI theme configuration
-└── package.json
 ```
-
-## Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-
-## Data Display
-
-The application shows the following statistics for each parkrun event:
-
-- Fastest finish time in the quarter
-- Fast quartile (25% of runners finished faster)
-- Average finish time
-- Slow quartile (75% of runners finished faster)
-- Average number of participants
-
-All times are displayed in minutes.
 
 ## API Integration
 
 The frontend expects a backend API running at `http://localhost:3001` providing:
 
-- `/api/stats` - GET endpoint returning quarterly statistics
+- `/api/stats` - GET endpoint returning quarterly statistics.
+- `/api/latest-date` - GET endpoint for latest event date available.
 
 ## Technology Stack
 
@@ -96,15 +66,3 @@ The frontend expects a backend API running at `http://localhost:3001` providing:
 - Vite
 - Material-UI v7
 - Axios for API calls
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-
-MIT

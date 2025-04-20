@@ -6,13 +6,25 @@ import latestDateRouter from './routes/latest_date.js';
 
 const app = express();
 
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? ['http://localhost:5173'];
 
 app.use(cors({
     origin: allowedOrigins,
     methods: ['GET'],
     credentials: true
 }));
+
+app.get('/', (_req, res) => {
+    res.json({
+        name: 'ParkRun Nordic Statistics API',
+        version: '1.0.0',
+        endpoints: {
+            health: '/health',
+            stats: '/api/stats',
+            latestDate: '/api/latest-date'
+        }
+    });
+});
 
 app.use('/health', healthRouter);
 app.use('/api/stats', statsRouter);
