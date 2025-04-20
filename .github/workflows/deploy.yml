@@ -40,8 +40,8 @@ jobs:
         env:
           ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          ALLOWED_ORIGINS: ${{ secrets.ALLOWED_ORIGINS }}
+          ALLOWED_ORIGINS: ""
           DATABASE_NAME: parkrun
         run: |
           cd cdk
-          npx cdk deploy --all --require-approval never
+          npm run cdk deploy --require-approval never

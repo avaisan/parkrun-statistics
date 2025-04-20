@@ -6,7 +6,7 @@
     "build": "tsc",
     "watch": "tsc -w",
     "cdk": "cdk",
-    "deploy": "cdk deploy --all",
+    "deploy": "cdk deploy InfrastructureStack",
     "clean": "rm -rf build cdk.out .cdk.staging"
   },
   "devDependencies": {
