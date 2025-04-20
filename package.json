@@ -8,10 +8,12 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "dev:frontend": "npm run dev -w frontend",
-    "dev:backend": "npm run dev:api -w backend",
-    "dev:scraper": "npm run dev:scraper -w backend",
-    "deploy": "npm run deploy -w cdk"
+    "frontend": "npm run ui -w frontend",
+    "backend": "npm run api -w backend",
+    "scraper": "npm run scraper -w backend",
+    "deploy": "npm run deploy -w cdk",
+    "lint": "npm run lint --workspaces",
+    "clean": "npm run clean --workspaces"
   },
   "devDependencies": {
     "tsx": "^4.19.3"

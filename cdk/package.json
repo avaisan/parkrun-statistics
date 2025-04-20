@@ -6,7 +6,8 @@
     "build": "tsc",
     "watch": "tsc -w",
     "cdk": "cdk",
-    "deploy": "cdk deploy --all"
+    "deploy": "cdk deploy --all",
+    "clean": "rm -rf build cdk.out .cdk.staging"
   },
   "devDependencies": {
     "@types/node": "22.14.1",

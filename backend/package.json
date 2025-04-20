@@ -9,7 +9,9 @@
     "scraper": "prisma generate && tsx scraper/src/index.ts",
     "db:migrate": "npx prisma migrate dev",
     "db:reset": "docker-compose down -v && docker-compose up -d postgres && npx prisma migrate reset --force",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "lint": "eslint .",
+    "clean": "rm -rf dist build"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
