@@ -21,11 +21,12 @@ export class DatabaseStack extends cdk.Stack {
       engine: rds.DatabaseClusterEngine.auroraPostgres({
         version: rds.AuroraPostgresEngineVersion.VER_17_2,
       }),
-      instanceProps: {
-        instanceType: ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE3, ec2.InstanceSize.MEDIUM),
-        vpc: props.vpc,
-      },
+      vpc: props.vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      writer: rds.ClusterInstance.serverlessV2('Writer'),
+      readers: [
+        rds.ClusterInstance.serverlessV2('Reader1')
+      ],
       serverlessV2MinCapacity: 0.5,
       serverlessV2MaxCapacity: 1,
       defaultDatabaseName: 'parkrun',
