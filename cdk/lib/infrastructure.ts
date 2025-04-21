@@ -53,36 +53,13 @@ export class InfrastructureStack extends cdk.NestedStack {
     runtime: lambda.Runtime.NODEJS_18_X,
     handler: 'index.handler',
     code: lambda.Code.fromInline(`
-      const AWS = require('aws-sdk');
-      const ecr = new AWS.ECR();
-      
-      exports.handler = async (event) => {
-        console.log('Event:', JSON.stringify(event, null, 2));
-        
-        if (event.RequestType === 'Create' || event.RequestType === 'Update') {
-          try {
-            const authData = await ecr.getAuthorizationToken().promise();
-            console.log('Got ECR authorization');
-            
-            // Add your image copy logic here if needed
-            
-            return {
-              PhysicalResourceId: 'base-image',
-              Data: {
-                Message: 'Base image copy initiated'
-              }
-            };
-          } catch (error) {
-            console.error('Error:', error);
-            throw error;
-          }
-        }
-        
-        return {
-          PhysicalResourceId: 'base-image'
+        exports.handler = async (event) => {
+          return {
+            statusCode: 200,
+            body: 'Hello World'
+          };
         };
-      };
-    `),
+      `),
   });
 
   // Grant ECR permissions to the function
@@ -97,7 +74,7 @@ export class InfrastructureStack extends cdk.NestedStack {
   new cdk.CustomResource(this, 'CopyBaseImage', {
     serviceToken: provider.serviceToken,
     properties: {
-      SourceImage: 'public.ecr.aws/sam/nodejs22.x-base:latest-arm64',
+      SourceImage: 'public.ecr.aws/lambda/nodejs:22',
       TargetRepository: this.apiRepository.repositoryUri,
       Tag: 'base'
     }
