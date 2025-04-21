@@ -1,54 +1,46 @@
 import * as cdk from 'aws-cdk-lib';
 import { getConfig } from '../lib/config';
 import { BaseStack } from '../lib/base';
+import { FrontendStack } from '../lib/frontend';
 import { CloudFrontWAFStack, ApiGatewayWAFStack } from '../lib/waf';
-//import { BackendStack } from '../lib/backend';
-//import { FrontendStack } from '../lib/frontend';
 
 
 const app = new cdk.App();
 const environment = process.env.ENVIRONMENT ?? 'dev';
 const config = getConfig(app, environment);
 
-const base = new BaseStack(app, `BaseStack`, {
-  config
+const agwwaf = new ApiGatewayWAFStack(app, 'ApiGatewayWAFStack', { 
+  config 
 });
 
 const cfwaf = new CloudFrontWAFStack(app, 'CloudFrontWAFStack', { 
   config 
 });
 
-const agwwaf = new ApiGatewayWAFStack(app, 'ApiGatewayWAFStack', { 
-  config 
+const base = new BaseStack(app, `BaseStack`, {
+  config,
+  apiWebAcl: agwwaf.webAcl,
+  cloudFrontWebAcl: cfwaf.webAcl
 });
 
-//const database = new DatabaseStack(base, 'DatabaseStack', {
-//  config,
-//  vpc: infra.vpc,
-//  bastionHost: infra.bastionHost,
-//  bastionRole: infra.bastionRole
-//});
+const frontend = new FrontendStack(app, `FrontendStack`, {
+  env: {
+    account: config.env.account,
+    region: 'us-east-1'  // Frontend stack must be in us-east-1 for CloudFront
+  },
+  config,
+  webAcl: cfwaf.webAcl,
+  apiUrl: base.backendStack.api.url
+});
 
-//const backend = new BackendStack(app, 'BackendStack', {
-//  config,
-//  vpc: infra.vpc,
-//  cluster: database.cluster,
-//  webAcl: waf.apiGatewayWebAcl
-//});
 
-//const frontend = new FrontendStack(app, 'FrontendStack', { 
-//  config,
-//  webAcl: waf.cloudFrontWebAcl 
-// });
-
-cfwaf.addDependency(base);
-agwwaf.addDependency(base);
-//database.addDependency(infra);
-//backend.addDependency(database);
-//frontend.addDependency(waf);
+base.addDependency(agwwaf);
+base.addDependency(cfwaf);
+frontend.addDependency(cfwaf);
+frontend.addDependency(base);
 
 // Tagging
-[base, cfwaf, agwwaf].forEach(stack => {
+[base, frontend, cfwaf, agwwaf].forEach(stack => {
   cdk.Tags.of(stack).add('Project', 'ParkRun');
   cdk.Tags.of(stack).add('Environment', config.environmentName);
 });

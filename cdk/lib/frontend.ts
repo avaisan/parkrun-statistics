@@ -9,15 +9,15 @@ import { type IStackConfig } from './config';
 interface FrontendStackProps extends cdk.StackProps {
   config: IStackConfig;
   webAcl: wafv2.CfnWebACL;
+  apiUrl: string;
 }
 
 export class FrontendStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props: FrontendStackProps) {
     super(scope, id, props);
 
-    const bucketname = `parkrunstats-${props.config.environmentName}-website-${this.account}-${this.region}`;
+    const bucketname = `parkrunstats-${props.config.environmentName}-website`;
 
-    // S3 bucket with environment-based naming
     const websiteBucket = new s3.Bucket(this, bucketname, {
       bucketName: bucketname,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -26,7 +26,7 @@ export class FrontendStack extends cdk.Stack {
       encryption: s3.BucketEncryption.S3_MANAGED,
     });
 
-    // CloudFront Origin Access Control
+    // CloudFront Origin Access Control (OAC)
     const oac = new cloudfront.CfnOriginAccessControl(this, 'OAC', {
       originAccessControlConfig: {
         name: cdk.Names.uniqueId(this),

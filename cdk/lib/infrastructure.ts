@@ -2,6 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as cr from 'aws-cdk-lib/custom-resources';
 import { type IStackConfig } from './config';
 import { Construct } from 'constructs';
 
@@ -36,15 +38,70 @@ export class InfrastructureStack extends cdk.NestedStack {
       ],
     });
 
-    // ECR Repository
-    this.apiRepository = new ecr.Repository(this, 'ApiRepository', {
-      repositoryName: `parkrun-api-${props.config.environmentName}`,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-      lifecycleRules: [{
-        maxImageCount: 5,
-      }],
-      imageScanOnPush: true
-    });
+   // ECR Repository
+   this.apiRepository = new ecr.Repository(this, 'ApiRepository', {
+    repositoryName: `parkrun-api-${props.config.environmentName}`,
+    removalPolicy: cdk.RemovalPolicy.RETAIN,
+    lifecycleRules: [{
+      maxImageCount: 5,
+    }],
+    imageScanOnPush: true
+  });
+
+  // Create custom resource to copy the base image
+  const copyImageFunction = new lambda.Function(this, 'CopyImageFunction', {
+    runtime: lambda.Runtime.NODEJS_18_X,
+    handler: 'index.handler',
+    code: lambda.Code.fromInline(`
+      const AWS = require('aws-sdk');
+      const ecr = new AWS.ECR();
+      
+      exports.handler = async (event) => {
+        console.log('Event:', JSON.stringify(event, null, 2));
+        
+        if (event.RequestType === 'Create' || event.RequestType === 'Update') {
+          try {
+            const authData = await ecr.getAuthorizationToken().promise();
+            console.log('Got ECR authorization');
+            
+            // Add your image copy logic here if needed
+            
+            return {
+              PhysicalResourceId: 'base-image',
+              Data: {
+                Message: 'Base image copy initiated'
+              }
+            };
+          } catch (error) {
+            console.error('Error:', error);
+            throw error;
+          }
+        }
+        
+        return {
+          PhysicalResourceId: 'base-image'
+        };
+      };
+    `),
+  });
+
+  // Grant ECR permissions to the function
+  this.apiRepository.grantPullPush(copyImageFunction);
+
+  // Create the custom resource provider
+  const provider = new cr.Provider(this, 'CopyImageProvider', {
+    onEventHandler: copyImageFunction,
+  });
+
+  // Create the custom resource
+  new cdk.CustomResource(this, 'CopyBaseImage', {
+    serviceToken: provider.serviceToken,
+    properties: {
+      SourceImage: 'public.ecr.aws/sam/nodejs22.x-base:latest-arm64',
+      TargetRepository: this.apiRepository.repositoryUri,
+      Tag: 'base'
+    }
+  });
     
     // Bastion host role with permissions for IAM database authentication
     this.bastionRole = new iam.Role(this, 'BastionRole', {

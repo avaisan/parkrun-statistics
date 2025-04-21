@@ -1,0 +1,1 @@
+FROM public.ecr.aws/sam/nodejs22.x-base:latest-arm64

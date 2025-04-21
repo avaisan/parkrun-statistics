@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "build:api_lambda_container": "docker build -f Dockerfile.api -t api-lambda .",
+    "build:lambda_container": "docker build -f Dockerfile.api -t api-lambda .",
     "api": "tsx api/src/server.ts",
     "scraper": "prisma generate && tsx scraper/src/index.ts",
     "db:migrate": "npx prisma migrate dev",
