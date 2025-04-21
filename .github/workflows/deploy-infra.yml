@@ -7,12 +7,16 @@ on:
       - 'cdk/**'
       - 'lib/**'
       - '.github/workflows/deploy-infra.yml'
+      - '!**.md'
+      - '!**/*.md'
   pull_request:
     branches: [ main ]
     paths:
       - 'cdk/**'
       - 'lib/**'
       - '.github/workflows/deploy-infra.yml'
+      - '!**.md'
+      - '!**/*.md'
   workflow_dispatch:
 
 permissions:

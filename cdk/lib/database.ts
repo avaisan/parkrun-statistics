@@ -3,23 +3,24 @@ import * as rds from 'aws-cdk-lib/aws-rds';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { type IStackConfig } from './config';
+import { Construct } from 'constructs';
 
-interface DatabaseStackProps extends cdk.StackProps {
+interface DatabaseStackProps extends cdk.NestedStackProps {
   config: IStackConfig;
-  vpc: ec2.Vpc;
-  bastionHost: ec2.Instance;
+  vpc: ec2.IVpc;
+  bastionHost: ec2.IInstance;
+  bastionRole: iam.IRole;
 }
 
-export class DatabaseStack extends cdk.Stack {
+export class DatabaseStack extends cdk.NestedStack {
   public readonly cluster: rds.DatabaseCluster;
   
-  constructor(scope: cdk.App, id: string, props: DatabaseStackProps) {
+  constructor(scope: Construct, id: string, props: DatabaseStackProps) {
     super(scope, id, props);
 
-    // Aurora PostgreSQL serverlessV2 database cluster
     this.cluster = new rds.DatabaseCluster(this, 'Database', {
       engine: rds.DatabaseClusterEngine.auroraPostgres({
-        version: rds.AuroraPostgresEngineVersion.VER_17_2,
+        version: rds.AuroraPostgresEngineVersion.VER_16_6,
       }),
       vpc: props.vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
@@ -43,23 +44,17 @@ export class DatabaseStack extends cdk.Stack {
       'Allow access from bastion host'
     );
 
-    // Grant bastion host IAM permissions to connect as master user
-    props.bastionHost.role?.addToPrincipalPolicy(
-      new iam.PolicyStatement({
-        actions: ['rds-db:connect'],
-        resources: [`arn:aws:rds-db:${this.region}:${this.account}:dbuser:${this.cluster.clusterIdentifier}/*`]
-      })
-    );
-
     // Outputs
     new cdk.CfnOutput(this, 'ClusterEndpoint', {
       value: this.cluster.clusterEndpoint.hostname,
       description: 'Cluster endpoint',
+      exportName: `${props.config.environmentName}-cluster-endpoint`
     });
 
     new cdk.CfnOutput(this, 'SecretArn', {
       value: this.cluster.secret?.secretArn || '',
       description: 'Database credentials secret ARN',
+      exportName: `${props.config.environmentName}-db-secret-arn`
     });
   }
 }

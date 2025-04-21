@@ -3,7 +3,7 @@
   "context": {
     "environments": {
       "dev": {
-        "account": "${AWS_ACCOUNT_ID}",
+        "account": "519716412397",
         "region": "eu-central-1",
         "environmentName": "dev",
         "allowedOrigins": [],

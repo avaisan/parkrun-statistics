@@ -54,7 +54,7 @@ export class BackendStack extends cdk.Stack {
       },
     });
 
-    // Associate WAF with API Gateway stage
+    // Associate regional WAF Web ACL with API Gateway stage
     new wafv2.CfnWebACLAssociation(this, 'ApiGatewayWAFAssociation', {
       resourceArn: `arn:aws:apigateway:${this.region}::/restapis/${this.api.restApiId}/stages/${this.api.deploymentStage.stageName}`,
       webAclArn: props.webAcl.attrArn

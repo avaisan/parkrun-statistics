@@ -35,7 +35,7 @@ export interface IEnvironmentConfig {
   
     return {
       env: {
-        account: process.env.AWS_ACCOUNT_ID || envConfig.account,
+        account: process.env.AWS_ACCOUNT_ID ?? envConfig.account,
         region: envConfig.region,
       },
       environmentName: envConfig.environmentName,

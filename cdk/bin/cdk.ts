@@ -1,52 +1,54 @@
 import * as cdk from 'aws-cdk-lib';
-import { InfrastructureStack } from '../lib/infrastructure';
-import { DatabaseStack } from '../lib/database';
-import { BackendStack } from '../lib/backend';
-import { WAFStack } from '../lib/waf';
-//import { FrontendStack } from '../lib/frontend';
 import { getConfig } from '../lib/config';
+import { BaseStack } from '../lib/base';
+import { CloudFrontWAFStack, ApiGatewayWAFStack } from '../lib/waf';
+//import { BackendStack } from '../lib/backend';
+//import { FrontendStack } from '../lib/frontend';
+
 
 const app = new cdk.App();
-const environment = process.env.ENVIRONMENT || 'dev';
+const environment = process.env.ENVIRONMENT ?? 'dev';
 const config = getConfig(app, environment);
 
-// Create stacks
-
-const waf = new WAFStack(app, 'ParkRunWAF', { 
-  config 
-});
-
-const infra = new InfrastructureStack(app, 'InfrastructureStack', { 
+const base = new BaseStack(app, `BaseStack`, {
   config
 });
 
-const database = new DatabaseStack(app, 'DatabaseStack', {
-  config,
-  vpc: infra.vpc,
-  bastionHost: infra.bastionHost,
+const cfwaf = new CloudFrontWAFStack(app, 'CloudFrontWAFStack', { 
+  config 
 });
 
-const backend = new BackendStack(app, 'BackendStack', {
-  config,
-  vpc: infra.vpc,
-  cluster: database.cluster,
-  webAcl: waf.apiGatewayWebAcl
+const agwwaf = new ApiGatewayWAFStack(app, 'ApiGatewayWAFStack', { 
+  config 
 });
+
+//const database = new DatabaseStack(base, 'DatabaseStack', {
+//  config,
+//  vpc: infra.vpc,
+//  bastionHost: infra.bastionHost,
+//  bastionRole: infra.bastionRole
+//});
+
+//const backend = new BackendStack(app, 'BackendStack', {
+//  config,
+//  vpc: infra.vpc,
+//  cluster: database.cluster,
+//  webAcl: waf.apiGatewayWebAcl
+//});
 
 //const frontend = new FrontendStack(app, 'FrontendStack', { 
 //  config,
 //  webAcl: waf.cloudFrontWebAcl 
 // });
 
-
- //infra.addDependency(waf);
+cfwaf.addDependency(base);
+agwwaf.addDependency(base);
 //database.addDependency(infra);
 //backend.addDependency(database);
 //frontend.addDependency(waf);
 
 // Tagging
-const stacks = [infra, database, backend, waf];
-stacks.forEach(stack => {
+[base, cfwaf, agwwaf].forEach(stack => {
   cdk.Tags.of(stack).add('Project', 'ParkRun');
   cdk.Tags.of(stack).add('Environment', config.environmentName);
 });

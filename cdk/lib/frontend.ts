@@ -2,7 +2,6 @@ import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
-import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { type IStackConfig } from './config';
@@ -77,14 +76,6 @@ export class FrontendStack extends cdk.Stack {
         }
       }
     }));
-
-    // Deploy frontend assets
-    new s3deploy.BucketDeployment(this, 'parkrun-statistics-s3', {
-      sources: [s3deploy.Source.asset('../frontend/dist')],
-      destinationBucket: websiteBucket,
-      distribution,
-      distributionPaths: ['/*'],
-    });
 
     // Outputs
     new cdk.CfnOutput(this, 'BucketName', {
