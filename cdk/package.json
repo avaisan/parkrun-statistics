@@ -5,9 +5,11 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
+    "lint": "eslint .",
     "cdk": "cdk",
     "deploy": "cdk deploy --all",
-    "clean": "rm -rf build cdk.out .cdk.staging"
+    "clean": "rm -rf build cdk.out .cdk.staging",
+    "destroy": "cdk destroy --all"
   },
   "devDependencies": {
     "@types/node": "22.14.1",

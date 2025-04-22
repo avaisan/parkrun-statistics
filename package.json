@@ -1,6 +1,7 @@
 {
   "name": "@parkrun/root",
   "private": true,
+  "type": "module",
   "workspaces": [
     "frontend",
     "backend",

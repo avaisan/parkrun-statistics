@@ -29,7 +29,7 @@ export class FrontendStack extends cdk.Stack {
 
     // Create S3 bucket origin with OAC
     const s3Origin = origins.S3BucketOrigin.withOriginAccessControl(websiteBucket, {
-      originAccessLevels: [cloudfront.AccessLevel.READ, cloudfront.AccessLevel.LIST],
+      originAccessLevels: [cloudfront.AccessLevel.READ],
       originPath: ''
     });
 
