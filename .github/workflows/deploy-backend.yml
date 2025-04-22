@@ -41,22 +41,30 @@ jobs:
             role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
             aws-region: eu-central-1
             
-        - name: Login to Amazon ECR
-          id: login-ecr
-          uses: aws-actions/amazon-ecr-login@v2
-            
-        - name: Build and Push Lambda Container
-          env:
-            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-            ECR_REPOSITORY: ${{ secrets.LAMBDA_ECR_REPOSITORY }}
-            IMAGE_TAG: ${{ github.sha }}
+        - name: Install Dependencies
           run: |
             cd backend
-            docker build -f Dockerfile.api -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-            
-        - name: Update Lambda Function
+            npm ci
+              
+        - name: Build
+          run: |
+            cd backend
+            npx prisma generate
+            npm run build
+              
+        - name: Package Lambda
+          run: |
+            cd backend
+            mkdir -p dist
+            cp -r build/api/* dist/
+            cp package*.json dist/
+            cd dist
+            npm ci --production
+            rm package*.json
+            zip -r ../function.zip .
+              
+        - name: Deploy to Lambda
           run: |
             aws lambda update-function-code \
               --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
-              --image-uri ${{ steps.login-ecr.outputs.registry }}/${{ secrets.LAMBDA_ECR_REPOSITORY }}:${{ github.sha }}
+              --zip-file fileb://backend/function.zip

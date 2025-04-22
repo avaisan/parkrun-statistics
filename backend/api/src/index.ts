@@ -1,3 +1,4 @@
+// api/src/index.ts
 import { APIGatewayProxyHandler } from 'aws-lambda';
 import { PrismaClient } from '@prisma/client';
 
@@ -5,6 +6,7 @@ const prisma = new PrismaClient();
 
 export const handler: APIGatewayProxyHandler = async () => {
   try {
+    // Your existing handler code
     const stats = await prisma.eventQuarterlyStats.findMany({
       orderBy: [
         { year: 'desc' },

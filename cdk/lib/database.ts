@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as kms from 'aws-cdk-lib/aws-kms';
 import { type IStackConfig } from './config';
 import { Construct } from 'constructs';
 
@@ -18,6 +19,12 @@ export class DatabaseStack extends cdk.NestedStack {
   constructor(scope: Construct, id: string, props: DatabaseStackProps) {
     super(scope, id, props);
 
+    const databaseKey = new kms.Key(this, 'DatabaseKey', {
+      enableKeyRotation: true,
+      description: 'KMS key for database encryption',
+      alias: `${props.config.environmentName}-database-key`
+    });
+
     this.cluster = new rds.DatabaseCluster(this, 'Database', {
       engine: rds.DatabaseClusterEngine.auroraPostgres({
         version: rds.AuroraPostgresEngineVersion.VER_16_6,
@@ -33,8 +40,13 @@ export class DatabaseStack extends cdk.NestedStack {
       defaultDatabaseName: 'parkrun',
       enableDataApi: true,
       iamAuthentication: true,
+      enablePerformanceInsights: true,
+      performanceInsightRetention: rds.PerformanceInsightRetention.DEFAULT, // 7 days
+      performanceInsightEncryptionKey: databaseKey,
       enableClusterLevelEnhancedMonitoring: true,
-      monitoringInterval: cdk.Duration.seconds(60)
+      monitoringInterval: cdk.Duration.seconds(60),
+      storageEncryptionKey: databaseKey,
+      storageEncrypted: true,
     });
 
     // Grant access to bastion
@@ -55,6 +67,12 @@ export class DatabaseStack extends cdk.NestedStack {
       value: this.cluster.secret?.secretArn || '',
       description: 'Database credentials secret ARN',
       exportName: `${props.config.environmentName}-db-secret-arn`
+    });
+
+    new cdk.CfnOutput(this, 'DatabaseKMSKeyArn', {
+      value: databaseKey.keyArn,
+      description: 'Database KMS Key ARN',
+      exportName: `${props.config.environmentName}-db-kms-key-arn`
     });
   }
 }

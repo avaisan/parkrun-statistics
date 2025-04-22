@@ -4,14 +4,13 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "build:lambda_container": "docker build -f Dockerfile.api -t api-lambda .",
     "api": "tsx api/src/server.ts",
     "scraper": "prisma generate && tsx scraper/src/index.ts",
     "db:migrate": "npx prisma migrate dev",
     "db:reset": "docker-compose down -v && docker-compose up -d postgres && npx prisma migrate reset --force",
     "db:studio": "npx prisma studio",
     "lint": "eslint .",
-    "clean": "rm -rf dist build"
+    "clean": "rm -rf dist build function.zip"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",

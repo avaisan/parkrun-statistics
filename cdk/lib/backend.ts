@@ -2,7 +2,6 @@ import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -14,16 +13,16 @@ interface BackendStackProps extends cdk.NestedStackProps {
   vpc: ec2.Vpc;
   cluster: rds.DatabaseCluster;
   webAcl: wafv2.CfnWebACL;
-  apiRepository: ecr.IRepository;
 }
 
 export class BackendStack extends cdk.NestedStack {
   public readonly api: apigateway.RestApi;
+  public readonly apiHandler: lambda.Function;
 
   constructor(scope: Construct, id: string, props: BackendStackProps) {
     super(scope, id, props);
 
-    // Lambda role for API handler with DB access via Data API
+    // Lambda role for API handler with DB access via RDS Data API
     const lambdaRole = new iam.Role(this, 'ApiHandlerRole', {
       assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
@@ -38,40 +37,29 @@ export class BackendStack extends cdk.NestedStack {
     }));
     props.cluster.grantDataApiAccess(lambdaRole);
     
-    // API Lambda, to be deployed as a container image from ECR
-    const apiHandler = new lambda.CfnFunction(this, 'ApiHandler', {
-      packageType: 'Image',
-      code: {
-        imageUri: `${props.apiRepository.repositoryUri}:base`  // Use public ECR image as placeholder
+    // Create empty Lambda function
+    this.apiHandler = new lambda.Function(this, 'ApiHandler', {
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromInline('exports.handler = async () => { return { statusCode: 500, body: "Not implemented" }; }'),
+      vpc: props.vpc,
+      vpcSubnets: {
+        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS
       },
-      role: lambdaRole.roleArn,
-      architectures: ['arm64'],
-      vpcConfig: {
-        securityGroupIds: [props.vpc.vpcDefaultSecurityGroup],
-        subnetIds: props.vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }).subnetIds
-      },
-      timeout: 30,
+      timeout: cdk.Duration.seconds(30),
       memorySize: 1024,
       environment: {
-        variables: {
-          CLUSTER_ARN: props.cluster.clusterArn,
-          SECRET_ARN: props.cluster.secret?.secretArn ?? '',
-          DATABASE_NAME: 'parkrun',
-          NODE_ENV: props.config.environmentName
-        }
-      }
-    });
-
-    // Create a Function from the CfnFunction for use with API Gateway
-    const apiHandlerFunction = lambda.Function.fromFunctionAttributes(this, 'ApiHandlerFunction', {
-      functionArn: apiHandler.attrArn,
-      role: lambdaRole,
-      sameEnvironment: true
+        CLUSTER_ARN: props.cluster.clusterArn,
+        SECRET_ARN: props.cluster.secret?.secretArn ?? '',
+        DATABASE_NAME: 'parkrun',
+        NODE_ENV: props.config.environmentName
+      },
+      role: lambdaRole
     });
 
     // REST API Gateway
     this.api = new apigateway.RestApi(this, 'Api', {
-      restApiName: `parkrun-api-${props.config.environmentName}`,
+      restApiName: `parkrunstats-api-${props.config.environmentName}`,
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: ['GET'],
@@ -86,13 +74,13 @@ export class BackendStack extends cdk.NestedStack {
 
     // API routes
     const stats = this.api.root.addResource('stats');
-    stats.addMethod('GET', new apigateway.LambdaIntegration(apiHandlerFunction));
+    stats.addMethod('GET', new apigateway.LambdaIntegration(this.apiHandler));
 
     const health = this.api.root.addResource('health');
-    health.addMethod('GET', new apigateway.LambdaIntegration(apiHandlerFunction));
+    health.addMethod('GET', new apigateway.LambdaIntegration(this.apiHandler));
 
     const latestdate = this.api.root.addResource('latest-date');
-    latestdate.addMethod('GET', new apigateway.LambdaIntegration(apiHandlerFunction));
+    latestdate.addMethod('GET', new apigateway.LambdaIntegration(this.apiHandler));
 
     // Output the API URL
     new cdk.CfnOutput(this, 'ApiUrl', {

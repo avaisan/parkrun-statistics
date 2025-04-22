@@ -16,47 +16,58 @@ export class FrontendStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props: FrontendStackProps) {
     super(scope, id, props);
 
-    const bucketname = `parkrunstats-${props.config.environmentName}-website`;
 
+    // S3 bucket for static website hosting
+    const bucketname = `parkrunstats-${props.config.environmentName}-website`;
     const websiteBucket = new s3.Bucket(this, bucketname, {
       bucketName: bucketname,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: false,
       encryption: s3.BucketEncryption.S3_MANAGED,
     });
 
-    // CloudFront Origin Access Control (OAC)
+    // Origin Access Control
     const oac = new cloudfront.CfnOriginAccessControl(this, 'OAC', {
       originAccessControlConfig: {
-        name: cdk.Names.uniqueId(this),
+        name: `${bucketname}-oac`,
         originAccessControlOriginType: 's3',
         signingBehavior: 'always',
         signingProtocol: 'sigv4'
       }
     });
 
+    // Create S3 bucket origin with OAC
+    const s3Origin = origins.S3BucketOrigin.withOriginAccessControl(websiteBucket, {
+      originAccessLevels: [cloudfront.AccessLevel.READ, cloudfront.AccessLevel.LIST],
+      originPath: ''
+    });
+
     // CloudFront distribution
-    const distribution = new cloudfront.Distribution(this, 'Distribution', {
-      defaultBehavior: {
-        origin: new origins.S3StaticWebsiteOrigin(websiteBucket),
+    const distribution = new cloudfront.Distribution(this, 'distribution', {
+      defaultBehavior: { 
+        origin: s3Origin,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
         cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
         compress: true,
+        originRequestPolicy: cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN,
+        responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
       },
-      webAclId: props.webAcl.attrArn,
-      defaultRootObject: 'index.html',
+    webAclId: props.webAcl.attrArn,  
+    defaultRootObject: 'index.html',
       errorResponses: [
         {
           httpStatus: 404,
           responseHttpStatus: 200,
           responsePagePath: '/404.html',
+          ttl: cdk.Duration.minutes(0)
         },
         {
           httpStatus: 500,
           responseHttpStatus: 200,
           responsePagePath: '/500.html',
+          ttl: cdk.Duration.minutes(0)
         },
       ],
     });
@@ -77,6 +88,14 @@ export class FrontendStack extends cdk.Stack {
       }
     }));
 
+    // Add CORS configuration if needed
+    websiteBucket.addCorsRule({
+      allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.HEAD],
+      allowedOrigins: props.config.allowedOrigins,
+      allowedHeaders: ['*'],
+      maxAge: 3600,
+    });
+
     // Outputs
     new cdk.CfnOutput(this, 'BucketName', {
       value: websiteBucket.bucketName,
@@ -89,5 +108,15 @@ export class FrontendStack extends cdk.Stack {
       description: 'CloudFront distribution domain name',
       exportName: `${props.config.environmentName}-distribution-domain`,
     });
+
+    new cdk.CfnOutput(this, 'DistributionId', {
+      value: distribution.distributionId,
+      description: 'CloudFront distribution ID',
+      exportName: `${props.config.environmentName}-distribution-id`,
+    });
+
+    // Tagging
+    cdk.Tags.of(websiteBucket).add('Environment', props.config.environmentName);
+    cdk.Tags.of(distribution).add('Environment', props.config.environmentName);
   }
 }

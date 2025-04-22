@@ -37,8 +37,7 @@ export class BaseStack extends cdk.Stack {
         config: props.config,
         vpc: this.infrastructureStack.vpc,
         cluster: this.databaseStack.cluster,
-        webAcl: props.apiWebAcl,
-        apiRepository: this.infrastructureStack.apiRepository,
+        webAcl: props.apiWebAcl
       });
   
       this.databaseStack.addDependency(this.infrastructureStack);
