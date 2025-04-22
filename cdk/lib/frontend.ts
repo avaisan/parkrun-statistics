@@ -27,16 +27,6 @@ export class FrontendStack extends cdk.Stack {
       encryption: s3.BucketEncryption.S3_MANAGED,
     });
 
-    // Origin Access Control
-    const oac = new cloudfront.CfnOriginAccessControl(this, 'OAC', {
-      originAccessControlConfig: {
-        name: `${bucketname}-oac`,
-        originAccessControlOriginType: 's3',
-        signingBehavior: 'always',
-        signingProtocol: 'sigv4'
-      }
-    });
-
     // Create S3 bucket origin with OAC
     const s3Origin = origins.S3BucketOrigin.withOriginAccessControl(websiteBucket, {
       originAccessLevels: [cloudfront.AccessLevel.READ, cloudfront.AccessLevel.LIST],
@@ -70,11 +60,8 @@ export class FrontendStack extends cdk.Stack {
           ttl: cdk.Duration.minutes(0)
         },
       ],
+      enabled: true
     });
-
-    // Add the OAC to the distribution
-    const cfnDistribution = distribution.node.defaultChild as cloudfront.CfnDistribution;
-    cfnDistribution.addPropertyOverride('DistributionConfig.Origins.0.OriginAccessControlId', oac.attrId);
 
     // Update bucket policy to only allow access from CloudFront
     websiteBucket.addToResourcePolicy(new iam.PolicyStatement({
@@ -87,14 +74,6 @@ export class FrontendStack extends cdk.Stack {
         }
       }
     }));
-
-    // Add CORS configuration if needed
-    websiteBucket.addCorsRule({
-      allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.HEAD],
-      allowedOrigins: props.config.allowedOrigins,
-      allowedHeaders: ['*'],
-      maxAge: 3600,
-    });
 
     // Outputs
     new cdk.CfnOutput(this, 'BucketName', {
