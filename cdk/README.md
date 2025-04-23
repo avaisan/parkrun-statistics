@@ -51,6 +51,9 @@ npm install && npm run build
 AWS_ROLE_ARN: ARN of the IAM role for GitHub Actions
 AWS_ACCOUNT_ID: Your AWS account ID
 LAMBDA_FUNCTION_NAME: Name of the Lambda function
+FRONTEND_BUCKET: S3 bucket URI
+CLOUDFRONT_ID: Cloudfront distribution id
+LAMBDA_FUNCTION_NAME
 ```
 2.1. If you plan to run cdk deploy locally, update `cdk.json` with correct AWS account IDs.
 2.2 CDK commands:

@@ -46,6 +46,9 @@ This might fail to captcha. I won't instruct here how to get past that.
 - AWS_ROLE_ARN (see output from oidc-role.yml)
 - AWS_ACCOUNT_ID
 - ALLOWED_ORIGINS (can be empty string)
+- FRONTEND_BUCKET
+- CLOUDFRONT_ID
+- LAMBDA_FUNCTION_NAME
 3. Push changes to main branch - observe pipelines triggering. Run `deploy-infra.yml` first so you have infrastructure. Then `deploy-backend` and `deploy-frontend` have something to push into.
 4. Use SSM to get to bastion host, use the connection to populate RDS database.
 
@@ -64,6 +67,7 @@ aws ssm start-session \
 
 5. Once infrastructure is provisioned, database has the schema + data, and application is deployed - app is ready.
 
+**Shutdown EC2 when you are not using it.**
 
 ## Architecture
 ![Screenshot of the UI](./public/cloud-infra.jpg)

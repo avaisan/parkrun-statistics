@@ -81,6 +81,17 @@ Resources:
                   - ec2:DeleteNatGateway
                   - ec2:DescribeNatGateways
                 Resource: "*"
+
+              # SSM permissions for CDK bootstrap
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:PutParameter
+                  - ssm:DeleteParameter
+                Resource: 
+                  - "arn:aws:ssm:*:*:parameter/cdk-bootstrap/*"
+                  - "arn:aws:ssm:*:*:parameter/cdk/*"
               
               # WAF permissions
               - Effect: Allow
@@ -123,6 +134,7 @@ Resources:
                   - iam:DeleteRolePolicy
                   - iam:AttachRolePolicy
                   - iam:DetachRolePolicy
+                  - iam:PassRole
                 Resource: "*"
               
               # CloudWatch Logs
