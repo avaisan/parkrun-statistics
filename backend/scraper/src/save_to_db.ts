@@ -21,8 +21,8 @@ export async function saveEventResult(eventResult: IEventResult): Promise<void> 
         });
         console.log(`Saved event ${eventResult.eventName} #${eventResult.eventId} to database`);
     } catch (error: unknown ) {
-        if (error instanceof Prisma.PrismaClientKnownRequestError) {
-            console.log(`Error code ${error.code}: Event ${eventResult.eventName} #${eventResult.eventId} already exists.`);
+        if (error) {
+            console.log(`Error code ${(error as any).code}: Event ${eventResult.eventName} #${eventResult.eventId} already exists.`); // eslint-disable-line @typescript-eslint/no-explicit-any
         }
     }
 }
