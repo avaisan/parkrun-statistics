@@ -57,11 +57,27 @@ jobs:
             cd backend
             mkdir -p dist
             cp -r build/api/* dist/
-            cp package*.json dist/
-            cd dist
-            npm ci --production
-            rm package*.json
-            zip -r ../function.zip .
+            node -e "const pkg = require('./package.json'); \
+              const newPkg = { \
+              dependencies: {} \
+              }; \
+              const apiDeps = [ \
+                '@aws-sdk/client-secrets-manager', \
+                '@prisma/client', \
+                'cors', \
+                'express', \
+                'serverless-http' \
+              ]; \
+              for (const dep of apiDeps) { \
+                if (pkg.dependencies[dep]) { \
+                  newPkg.dependencies[dep] = pkg.dependencies[dep]; \
+                } \
+              } \
+              require('fs').writeFileSync('./dist/package.json', JSON.stringify(newPkg, null, 2));"
+              cd dist
+              npm ci --production
+              rm package.json
+              zip -r ../function.zip .
               
         - name: Deploy to Lambda
           run: |
