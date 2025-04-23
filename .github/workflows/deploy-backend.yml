@@ -1,0 +1,70 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+      - '!**.md'
+      - '!**/*.md'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+      - '!**.md'
+      - '!**/*.md'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-backend:
+      runs-on: ubuntu-latest
+      environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+      
+      steps:
+        - uses: actions/checkout@v4
+        
+        - name: Setup Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version: '22'
+            cache: 'npm'
+            
+        - name: Configure AWS Credentials
+          uses: aws-actions/configure-aws-credentials@v4
+          with:
+            role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+            aws-region: eu-central-1
+            
+        - name: Install Dependencies
+          run: |
+            cd backend
+            npm ci
+              
+        - name: Build
+          run: |
+            cd backend
+            npx prisma generate
+            npm run build
+              
+        - name: Package Lambda
+          run: |
+            cd backend
+            mkdir -p dist
+            cp -r build/api/* dist/
+            cp package*.json dist/
+            cd dist
+            npm ci --production
+            rm package*.json
+            zip -r ../function.zip .
+              
+        - name: Deploy to Lambda
+          run: |
+            aws lambda update-function-code \
+              --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
+              --zip-file fileb://backend/function.zip

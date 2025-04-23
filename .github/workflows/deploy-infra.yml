@@ -1,0 +1,67 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'cdk/**'
+      - 'lib/**'
+      - '.github/workflows/deploy-infra.yml'
+      - '!**.md'
+      - '!**/*.md'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'cdk/**'
+      - 'lib/**'
+      - '.github/workflows/deploy-infra.yml'
+      - '!**.md'
+      - '!**/*.md'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy (dev/prod)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-infrastructure:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-central-1
+          
+      - name: Install CDK Dependencies
+        run: |
+          cd cdk
+          npm ci
+          
+      - name: Deploy Infrastructure
+        env:
+          ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          DATABASE_NAME: parkrun
+        run: |
+          cd cdk
+          npm run deploy -- --require-approval never

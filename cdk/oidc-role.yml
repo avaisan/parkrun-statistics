@@ -1,0 +1,146 @@
+Parameters:
+  GitHubOrg:
+    Type: String
+  RepositoryName:
+    Type: String
+
+Resources:
+  GithubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: 
+        - sts.amazonaws.com
+      ThumbprintList:
+        - "6938fd4d98bab03faadb97b34396831e3780aea1"
+
+  GithubActionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: GithubActionsRole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Ref GithubOidcProvider
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${RepositoryName}:*
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CDKDeploymentPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # CloudFormation permissions for CDK
+              - Effect: Allow
+                Action:
+                  - cloudformation:*
+                Resource: "*"
+              
+              # Frontend and CDK S3 bucket permissions
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource: "*"
+              
+              # Lambda permissions
+              - Effect: Allow
+                Action:
+                  - lambda:*
+                Resource: "*"
+              
+              # VPC and networking
+              - Effect: Allow
+                Action:
+                  - ec2:CreateSecurityGroup
+                  - ec2:DeleteSecurityGroup
+                  - ec2:DescribeSecurityGroups
+                  - ec2:AuthorizeSecurityGroupIngress
+                  - ec2:RevokeSecurityGroupIngress
+                  - ec2:CreateVpc
+                  - ec2:DeleteVpc
+                  - ec2:DescribeVpcs
+                  - ec2:CreateSubnet
+                  - ec2:DeleteSubnet
+                  - ec2:DescribeSubnets
+                  - ec2:CreateRouteTable
+                  - ec2:DeleteRouteTable
+                  - ec2:DescribeRouteTables
+                  - ec2:CreateRoute
+                  - ec2:DeleteRoute
+                  - ec2:CreateInternetGateway
+                  - ec2:DeleteInternetGateway
+                  - ec2:AttachInternetGateway
+                  - ec2:DetachInternetGateway
+                  - ec2:CreateNatGateway
+                  - ec2:DeleteNatGateway
+                  - ec2:DescribeNatGateways
+                Resource: "*"
+              
+              # WAF permissions
+              - Effect: Allow
+                Action:
+                  - wafv2:*
+                Resource: "*"
+              
+              # CloudFront permissions
+              - Effect: Allow
+                Action:
+                  - cloudfront:*
+                Resource: "*"
+              
+              # RDS permissions
+              - Effect: Allow
+                Action:
+                  - rds:CreateDBCluster
+                  - rds:DeleteDBCluster
+                  - rds:DescribeDBClusters
+                  - rds:ModifyDBCluster
+                  - rds:CreateDBInstance
+                  - rds:DeleteDBInstance
+                  - rds:DescribeDBInstances
+                  - rds:ModifyDBInstance
+                Resource: "*"
+              
+              # KMS permissions for RDS encryption
+              - Effect: Allow
+                Action:
+                  - kms:*
+                Resource: "*"
+              
+              # IAM permissions for role creation
+              - Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:DeleteRole
+                  - iam:GetRole
+                  - iam:PutRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                Resource: "*"
+              
+              # CloudWatch Logs
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: "*"
+              
+              # API Gateway
+              - Effect: Allow
+                Action:
+                  - apigateway:GET
+                  - apigateway:POST
+                  - apigateway:PUT
+                  - apigateway:DELETE
+                Resource: "*"
+
+Outputs:
+  RoleArn:
+    Description: ARN of the GitHub Actions Role
+    Value: !GetAtt GithubActionsRole.Arn

@@ -1,0 +1,32 @@
+{
+  "name": "@parkrun/backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "api": "tsx api/src/server.ts",
+    "scraper": "prisma generate && tsx scraper/src/index.ts",
+    "db:migrate": "npx prisma migrate dev",
+    "db:reset": "docker-compose down -v && docker-compose up -d postgres && npx prisma migrate reset --force",
+    "db:studio": "npx prisma studio",
+    "lint": "eslint .",
+    "clean": "rm -rf dist build function.zip"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "aws-lambda": "^1.0.7",
+    "axios": "^1.8.4",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.149",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.1",
+    "prisma": "^6.6.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

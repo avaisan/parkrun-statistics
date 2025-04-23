@@ -1,0 +1,21 @@
+{
+  "app": "npx tsx bin/cdk.ts",
+  "context": {
+    "environments": {
+      "dev": {
+        "account": "${AWS_ACCOUNT_ID}",
+        "region": "eu-central-1",
+        "environmentName": "dev",
+        "allowedOrigins": [],
+        "bastionInstanceType": "t3.micro"
+      },
+      "prod": {
+        "account": "${AWS_ACCOUNT_ID}",
+        "region": "eu-central-1",
+        "environmentName": "prod",
+        "allowedOrigins": [],
+        "bastionInstanceType": "t3.micro"
+      }
+    }
+  }
+}

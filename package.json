@@ -1,0 +1,22 @@
+{
+  "name": "@parkrun/root",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "cdk"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "frontend": "npm run ui -w frontend",
+    "backend": "npm run api -w backend",
+    "scraper": "npm run scraper -w backend",
+    "deploy": "npm run deploy -w cdk",
+    "lint": "npm run lint --workspaces",
+    "clean": "npm run clean --workspaces"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3"
+  }
+}

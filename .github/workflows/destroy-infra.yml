@@ -1,0 +1,62 @@
+name: Destroy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to destroy (dev/prod)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+      confirmation:
+        description: 'Type "destroy" to confirm destruction'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  destroy-infrastructure:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment == 'prod' && 'production' || 'development' }}
+    
+    if: ${{ inputs.confirmation == 'destroy' }}
+    
+    steps:
+      - name: Confirm Destruction
+        run: |
+          echo "⚠️ WARNING: Destroying infrastructure for environment: ${{ inputs.environment }}"
+          echo "This action cannot be undone!"
+          
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-central-1
+          
+      - name: Install CDK Dependencies
+        run: |
+          cd cdk
+          npm ci
+          
+      - name: Destroy Infrastructure
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          DATABASE_NAME: parkrun
+        run: |
+          cd cdk
+          npm run destroy -- --force

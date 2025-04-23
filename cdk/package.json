@@ -1,0 +1,25 @@
+{
+  "name": "@parkrun/cdk",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "lint": "eslint .",
+    "cdk": "cdk",
+    "deploy": "cdk deploy --all",
+    "clean": "rm -rf build cdk.out .cdk.staging",
+    "destroy": "cdk destroy --all"
+  },
+  "devDependencies": {
+    "@types/node": "22.14.1",
+    "aws-cdk": "2.1010.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.19.3",
+    "typescript": "~5.8.3"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.190.0",
+    "constructs": "^10.4.2"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "outDir": "./build",
+    "rootDir": "."
+  },
+  "include": [
+    "api/src/**/*.ts",
+    "scraper/src/**/*.ts"
+  ],
+  "exclude": ["node_modules", "build"]
+}

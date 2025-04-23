@@ -1,0 +1,60 @@
+# Custom
+data-export/
+
+# Dependencies
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+**/dist/
+**/build/
+**/.vite/
+
+# Environment files
+.env
+.env.*
+!.env.example
+**/prisma/.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# Testing
+coverage/
+**/coverage/
+test-results/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Database
+**/prisma/migrations/*/
+!**/prisma/migrations/*/*.sql
+
+# Optional caches
+.eslintcache
+.prettier cache

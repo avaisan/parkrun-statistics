@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+  previewFeatures = ["views"]
+  binaryTargets   = ["native", "rhel-openssl-1.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id                    Int      @id @default(autoincrement())
+  eventId               Int
+  eventName             String
+  eventCountry          String
+  eventDate             DateTime
+  finishTimes           Int[]
+  avgFinishTimeInMin    Float
+  fastestFinishTimeInMin Float
+  createdAt             DateTime @default(now())
+
+  @@unique([eventName, eventId])
+}
+
+view EventQuarterlyStats {
+  eventName          String
+  eventCountry       String
+  year               Int
+  quarter            Int
+  fastest_time        Float    // Fastest single time in the quarter
+  fastest_quartile    Float    // Average of the fastest 25% times
+  avg_finish_time      Float    // Average finish time
+  slowest_quartile    Float    // Average of the slowest 25% times
+  avg_participants    Float    // Average number of participants
+
+  @@unique([eventName, year, quarter])
+  @@map("event_quarterly_stats")
+}
