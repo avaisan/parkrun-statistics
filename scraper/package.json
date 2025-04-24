@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "scraper": "prisma generate && tsx src/index.ts",
+    "scraper": "prisma generate --schema=../prisma/schema.prisma && tsx src/index.ts",
 
     "lint": "eslint .",
     "clean": "rm -rf dist build function.zip"

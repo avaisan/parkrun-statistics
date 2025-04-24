@@ -17,15 +17,16 @@ services:
 
   api:
     build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: backend/Dockerfile.dev
     environment:
       DATABASE_URL: postgresql://parkrun:parkrun@postgres:5432/parkrun?schema=public
       NODE_ENV: development
       PORT: 3001
     volumes:
-      - ./backend:/app
-      - /app/node_modules
+      - ./backend:/app/backend
+      - /app/backend/node_modules
+      - /app/prisma/node_modules
     ports:
       - "3001:3001"
     depends_on:

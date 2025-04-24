@@ -3,13 +3,20 @@ FROM node:23-slim
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y openssl
+
+# Copy package files
 COPY package*.json ./
+COPY prisma/package*.json ./prisma/
+COPY backend/package*.json ./backend/
+
 RUN npm install
 RUN npm install -g tsx
 
-COPY prisma ./prisma/
-RUN npx prisma generate
+# Copy Prisma schema and generate client
+COPY prisma/schema.prisma ./prisma/
+RUN npm run generate -w prisma
 
-COPY . .
+COPY backend ./backend/
 
+WORKDIR /app/backend
 CMD ["npm", "run", "api"]

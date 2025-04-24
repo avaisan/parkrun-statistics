@@ -46,40 +46,28 @@ jobs:
             cd backend
             npm ci
               
-        - name: Build
-          run: |
-            cd backend
-            npx prisma generate
-            npm run build
+        - name: Generate Prisma Client
+          run: npm run generate -w prisma
               
+        - name: Build Prisma Package
+          run: npm run build -w prisma
+                
+        - name: Build Backend
+          run: npm run build -w backend
+                
         - name: Package Lambda
+          working-directory: backend
           run: |
-            cd backend
             mkdir -p dist
             cp -r build/api/* dist/
-            node -e "const pkg = require('./package.json'); \
-              const newPkg = { \
-                dependencies: {} \
-              }; \
-              const apiDeps = [ \
-                '@aws-sdk/client-secrets-manager', \
-                '@prisma/client', \
-                'cors', \
-                'express', \
-                'serverless-http' \
-              ]; \
-              for (const dep of apiDeps) { \
-                if (pkg.dependencies[dep]) { \
-                  newPkg.dependencies[dep] = pkg.dependencies[dep]; \
-                } \
-              } \
-              require('fs').writeFileSync('./dist/package.json', JSON.stringify(newPkg, null, 2));"
+            cp package.json dist/
             cd dist
+            mkdir -p node_modules/@prisma
+            cp -r ../../prisma/generated node_modules/@prisma/client
             npm install --production --no-package-lock
             rm package.json
             zip -r ../function.zip .
-          
-              
+                           
         - name: Deploy to Lambda
           run: |
             aws lambda update-function-code \
