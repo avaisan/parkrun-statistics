@@ -52,21 +52,10 @@ jobs:
         - name: Build Prisma Package
           run: npm run build -w prisma
                 
-        - name: Build Backend
-          run: npm run build -w backend
-                
         - name: Package Lambda
-          working-directory: backend
           run: |
-            mkdir -p dist
-            cp -r build/api/* dist/
-            cp package.json dist/
-            cd dist
-            mkdir -p node_modules/@prisma
-            cp -r ../../prisma/generated node_modules/@prisma/client
-            npm install --production --no-package-lock
-            rm package.json
-            zip -r ../function.zip .
+            npm run build -w backend
+            npm run package -w backend
                            
         - name: Deploy to Lambda
           run: |
