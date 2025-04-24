@@ -52,8 +52,11 @@ test-results/
 Thumbs.db
 
 # Database
-**/prisma/migrations/*/
-!**/prisma/migrations/*/*.sql
+prisma/.env
+prisma/dist/
+prisma/generated/
+prisma/migrations/*
+!prisma/migrations/*/*.sql
 
 # Optional caches
 .eslintcache

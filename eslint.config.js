@@ -59,6 +59,18 @@ export default tseslint.config(
     }
   },
   {
+    // Scraper specific config
+    files: ['scraper/**/*.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.node
+      }
+    },
+    rules: {
+      'no-console': 'off' // Allow console logs in backend
+    }
+  },
+  {
     // CDK specific config
     files: ['cdk/**/*.ts'],
     rules: {

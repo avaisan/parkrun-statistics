@@ -1,0 +1,22 @@
+{
+    "name": "@parkrun/prisma",
+    "version": "1.0.0",
+    "private": true,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+      "build": "tsc",
+      "migrate": "prisma migrate deploy",
+      "reset": "prisma migrate reset --force",
+      "studio": "prisma studio",
+      "generate": "prisma generate"
+    },
+    "devDependencies": {
+      "prisma": "^6.6.0",
+      "typescript": "^5.8.3"
+    },
+    "dependencies": {
+      "@prisma/client": "^6.6.0"
+    }
+  }
+  

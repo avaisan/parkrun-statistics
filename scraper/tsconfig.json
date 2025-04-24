@@ -12,7 +12,7 @@
     "rootDir": "."
   },
   "include": [
-    "api/src/**/*.ts"
+    "src/**/*.ts"
   ],
   "exclude": ["node_modules", "build"]
 }

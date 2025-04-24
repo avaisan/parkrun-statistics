@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@prisma/client';
 import { IEventResult } from './scraper.js'
 
 const prisma = new PrismaClient()
