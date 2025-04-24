@@ -5,11 +5,12 @@
   "scripts": {
     "build": "tsc",
     "api": "tsx api/src/server.ts",
-    "package": "mkdir -p dist && cp -r build/api/* dist/ && cp package.json dist/ && cd dist && mkdir -p node_modules/@prisma/client && cp -r ../../node_modules/.prisma/client/* node_modules/@prisma/client/ && npm install --production --no-package-lock && rm package.json && cd .. && zip -r function.zip dist/",
+    "package": "cp package.json build/ && cd build && npm install --production --no-package-lock && rm package.json && cd .. && zip -r function.zip build/",
     "lint": "eslint .",
     "clean": "rm -rf dist build function.zip"
   },
   "dependencies": {
+    "@parkrun/prisma": "*",
     "@prisma/client": "^6.6.0",
     "aws-lambda": "^1.0.7",
     "axios": "^1.8.4",
