@@ -9,7 +9,7 @@ export class ParkRunStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Create WAF as nested stack
+    // Create WAF as nested stack with explicit region
     const wafStack = new WAFStack(this, 'WAFStack');
 
     const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {

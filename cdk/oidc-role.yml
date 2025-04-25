@@ -44,7 +44,12 @@ Resources:
                   - wafv2:*
                   - logs:*
                   - iam:*
+                  - ssm:*
                 Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/cdk-bootstrap/*
 
 Outputs:
   RoleArn:

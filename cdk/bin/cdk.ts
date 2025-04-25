@@ -5,5 +5,6 @@ import { ParkRunStack } from '../lib/infrastructure';
 const app = new cdk.App();
 
 new ParkRunStack(app, 'ParkRunStack', {
-  env: { region: 'eu-central-1' }
+  env: { region: 'eu-central-1' },
+  crossRegionReferences: true
 });

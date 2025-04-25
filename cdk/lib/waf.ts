@@ -3,10 +3,14 @@ import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 
+export interface WAFStackProps extends cdk.NestedStackProps {
+  region?: string;
+}
+
 export class WAFStack extends cdk.NestedStack {
   public readonly webAcl: wafv2.CfnWebACL;
 
-  constructor(scope: Construct, id: string, props?: cdk.NestedStackProps) {
+  constructor(scope: Construct, id: string, props?: WAFStackProps) {
     super(scope, id, props);
 
     this.webAcl = new wafv2.CfnWebACL(this, 'CloudFrontWebACL', {
