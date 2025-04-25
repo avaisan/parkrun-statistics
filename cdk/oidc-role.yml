@@ -41,7 +41,6 @@ Resources:
                   - cloudformation:*
                   - s3:*
                   - cloudfront:*
-                  - wafv2:*
                   - logs:*
                   - iam:*
                   - ssm:*
