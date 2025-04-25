@@ -2,11 +2,33 @@ import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import { Construct } from 'constructs';
 
+interface ParkRunStackProps extends cdk.StackProps {
+  domainName: string;
+  hostedZoneId: string;
+}
+
 export class ParkRunStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: ParkRunStackProps) {
     super(scope, id, props);
+
+    const subdomain = 'parkrun';
+    const fullDomain = `${subdomain}.${props.domainName}`;
+
+    const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
+      hostedZoneId: props.hostedZoneId,
+      zoneName: props.domainName
+    });
+
+    const certificate = new acm.DnsValidatedCertificate(this, 'Certificate', {
+      domainName: fullDomain,
+      hostedZone: hostedZone,
+      region: 'us-east-1',
+    });;
 
     const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -26,6 +48,8 @@ export class ParkRunStack extends cdk.Stack {
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         compress: true
       },
+      domainNames: [fullDomain],
+      certificate: certificate,
       defaultRootObject: 'index.html',
       errorResponses: [
         {
@@ -44,6 +68,22 @@ export class ParkRunStack extends cdk.Stack {
       minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021
     });
 
+    new route53.ARecord(this, 'ParkRunRecord', {
+      zone: hostedZone,
+      recordName: subdomain,
+      target: route53.RecordTarget.fromAlias(
+        new targets.CloudFrontTarget(distribution)
+      )
+    });
+
+    new route53.ARecord(this, 'WwwRecord', {
+      zone: hostedZone,
+      recordName: 'www',
+      target: route53.RecordTarget.fromAlias(
+        new targets.CloudFrontTarget(distribution)
+      )
+    });
+
     new cdk.CfnOutput(this, 'DistributionDomain', {
       value: distribution.distributionDomainName,
     });
@@ -54,6 +94,14 @@ export class ParkRunStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'BucketName', {
       value: websiteBucket.bucketName,
+    });
+
+    new cdk.CfnOutput(this, 'CertificateArn', {
+      value: certificate.certificateArn,
+    });
+
+    new cdk.CfnOutput(this, 'DomainName', {
+      value: fullDomain,
     });
   }
 }
