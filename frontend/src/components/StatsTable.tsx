@@ -4,7 +4,7 @@ import {
   Paper, TableSortLabel, Select, MenuItem, FormControl, InputLabel,
   Stack, Tooltip, Link
 } from '@mui/material';
-import { QuarterlyStats, CountryCode } from '../types.js';
+import { QuarterlyStats, CountryCode } from '../types';
 import { formatTime } from '../services/time_format.js';
 
 interface StatsTableProps {

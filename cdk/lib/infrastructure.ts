@@ -1,69 +1,48 @@
 import * as cdk from 'aws-cdk-lib';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import { type IStackConfig } from './config';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import { Construct } from 'constructs';
 
-interface InfrastructureStackProps extends cdk.NestedStackProps {
-  config: IStackConfig;
-}
-
-export class InfrastructureStack extends cdk.NestedStack {
-  public readonly vpc: ec2.Vpc;
-  public readonly bastionHost: ec2.Instance;
-  public readonly bastionRole: iam.IRole;
-  
-  constructor(scope: Construct, id: string, props: InfrastructureStackProps) {
+export class ParkrunStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: cdk.StackProps & { webAclId: string }) {
     super(scope, id, props);
 
-    // VPC with private and public subnets
-    this.vpc = new ec2.Vpc(this, 'VPC', {
-      maxAzs: 2,
-      natGateways: 1,
-      subnetConfiguration: [
+    const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, 'OAI');
+    websiteBucket.grantRead(originAccessIdentity);
+
+    const distribution = new cloudfront.Distribution(this, 'Distribution', {
+      defaultBehavior: {
+        origin: new origins.S3Origin(websiteBucket, { originAccessIdentity }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+      },
+      defaultRootObject: 'index.html',
+      errorResponses: [
         {
-          name: 'Public',
-          subnetType: ec2.SubnetType.PUBLIC,
-          cidrMask: 24,
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/404.html',
+          ttl: cdk.Duration.minutes(0)
         },
         {
-          name: 'Private',
-          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
-          cidrMask: 24,
+          httpStatus: 500,
+          responseHttpStatus: 200,
+          responsePagePath: '/500.html',
+          ttl: cdk.Duration.minutes(0)
         },
       ],
+      webAclId: props.webAclId,
     });
 
-    // Bastion host role with permissions for IAM database authentication
-    this.bastionRole = new iam.Role(this, 'BastionRole', {
-      assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
-      managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'),
-      ]
-    });
-
-    this.bastionRole.addToPrincipalPolicy(
-      new iam.PolicyStatement({
-        actions: ['rds-db:connect'],
-        resources: [`arn:aws:rds-db:${this.region}:${this.account}:dbuser:*/*`]
-      })
-    );
-
-    // Create bastion host with the role
-    this.bastionHost = new ec2.Instance(this, 'BastionHost', {
-      vpc: this.vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PUBLIC },
-      instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
-      machineImage: new ec2.AmazonLinuxImage({
-        generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2023,
-      }),
-      role: this.bastionRole,
-      requireImdsv2: true,
-      securityGroup: new ec2.SecurityGroup(this, 'BastionSecurityGroup', {
-        vpc: this.vpc,
-        description: 'Security group for Bastion Host',
-        allowAllOutbound: true,
-      })
+    new cdk.CfnOutput(this, 'DistributionDomain', {
+      value: distribution.distributionDomainName,
     });
   }
 }

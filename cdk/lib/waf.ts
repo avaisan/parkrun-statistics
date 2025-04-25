@@ -1,39 +1,31 @@
 import * as cdk from 'aws-cdk-lib';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as logs from 'aws-cdk-lib/aws-logs';
-import { type IStackConfig } from './config';
-
-interface WAFStackProps extends cdk.StackProps {
-  config: IStackConfig;
-}
 
 export class CloudFrontWAFStack extends cdk.Stack {
   public readonly webAcl: wafv2.CfnWebACL;
 
-  constructor(scope: cdk.App, id: string, props: WAFStackProps) {
+  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, {
       ...props,
-      env: {
-        account: props.config.env.account,
-        region: 'us-east-1' // CloudFront WAF must be in us-east-1
-      }
+      env: { region: 'us-east-1' }  // CloudFront WAF must be in us-east-1
     });
 
     this.webAcl = new wafv2.CfnWebACL(this, 'CloudFrontWebACL', {
       defaultAction: { allow: {} },
       scope: 'CLOUDFRONT',
-      name: `parkrun-cloudfront-waf-${props.config.environmentName}`,
+      name: 'parkrun-cloudfront-waf',
       description: 'WAF Web ACL for CloudFront distribution',
       visibilityConfig: {
         cloudWatchMetricsEnabled: true,
         metricName: 'CloudFrontWebACLMetrics',
         sampledRequestsEnabled: true,
       },
-      rules: getWafRules('CloudFront')
+      rules: getWafRules()
     });
 
     const logGroup = new logs.LogGroup(this, 'CloudFrontWAFLogs', {
-      logGroupName: `aws-waf-logs-cloudfront-${props.config.environmentName}`,
+      logGroupName: 'aws-waf-logs-cloudfront',
       retention: logs.RetentionDays.THREE_MONTHS,
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
@@ -45,44 +37,11 @@ export class CloudFrontWAFStack extends cdk.Stack {
   }
 }
 
-export class ApiGatewayWAFStack extends cdk.Stack {
-  public readonly webAcl: wafv2.CfnWebACL;
-
-  constructor(scope: cdk.App, id: string, props: WAFStackProps) {
-    super(scope, id, props);
-
-    this.webAcl = new wafv2.CfnWebACL(this, 'ApiGatewayWebACL', {
-      defaultAction: { allow: {} },
-      scope: 'REGIONAL',
-      name: `parkrun-api-waf-${props.config.environmentName}`,
-      description: 'WAF Web ACL for API Gateway',
-      visibilityConfig: {
-        cloudWatchMetricsEnabled: true,
-        metricName: 'ApiGatewayWebACLMetrics',
-        sampledRequestsEnabled: true,
-      },
-      rules: getWafRules('ApiGateway')
-    });
-
-    const logGroup = new logs.LogGroup(this, 'ApiGatewayWAFLogs', {
-      logGroupName: `aws-waf-logs-regional-${props.config.environmentName}`,
-      retention: logs.RetentionDays.THREE_MONTHS,
-      removalPolicy: cdk.RemovalPolicy.DESTROY
-    });
-
-    // Enable logging for API Gateway WAF
-    new wafv2.CfnLoggingConfiguration(this, 'ApiGatewayWAFLogging', {
-      logDestinationConfigs: [logGroup.logGroupArn],
-      resourceArn: this.webAcl.attrArn
-    });
-  }
-}
-
-function getWafRules(type: 'CloudFront' | 'ApiGateway'): wafv2.CfnWebACL.RuleProperty[] {
-  const rules: wafv2.CfnWebACL.RuleProperty[] = [
+function getWafRules(): wafv2.CfnWebACL.RuleProperty[] {
+  return [
     // AWS Managed Rules - Core Rule Set
     {
-      name: `${type}AWSManagedRulesCommonRuleSet`,
+      name: 'AWSManagedRulesCommonRuleSet',
       priority: 10,
       overrideAction: { none: {} },
       statement: {
@@ -93,14 +52,14 @@ function getWafRules(type: 'CloudFront' | 'ApiGateway'): wafv2.CfnWebACL.RulePro
       },
       visibilityConfig: {
         cloudWatchMetricsEnabled: true,
-        metricName: `${type}AWSManagedRulesCommonRuleSetMetrics`,
+        metricName: 'AWSManagedRulesCommonRuleSetMetrics',
         sampledRequestsEnabled: true,
       }
     },
 
     // Known Bad Inputs
     {
-      name: `${type}AWSManagedRulesKnownBadInputsRuleSet`,
+      name: 'AWSManagedRulesKnownBadInputsRuleSet',
       priority: 20,
       overrideAction: { none: {} },
       statement: {
@@ -111,35 +70,33 @@ function getWafRules(type: 'CloudFront' | 'ApiGateway'): wafv2.CfnWebACL.RulePro
       },
       visibilityConfig: {
         cloudWatchMetricsEnabled: true,
-        metricName: `${type}AWSManagedRulesKnownBadInputsRuleSetMetrics`,
+        metricName: 'AWSManagedRulesKnownBadInputsRuleSetMetrics',
         sampledRequestsEnabled: true,
       }
     },
 
     // Rate Limiting Rule
     {
-      name: `${type}RateLimitRule`,
-      priority: 40,
+      name: 'RateLimitRule',
+      priority: 30,
       action: { block: {} },
       statement: {
         rateBasedStatement: {
           aggregateKeyType: 'IP',
-          limit: type === 'ApiGateway' ? 1000 : 2000
+          limit: 2000
         }
       },
       visibilityConfig: {
         cloudWatchMetricsEnabled: true,
-        metricName: `${type}RateLimitRuleMetrics`,
+        metricName: 'RateLimitRuleMetrics',
         sampledRequestsEnabled: true,
       }
-    }
-  ];
+    },
 
-  // Add geo-blocking only for CloudFront
-  if (type === 'CloudFront') {
-    rules.push({
+    // Geo-blocking Rule - Allow Nordic Countries
+    {
       name: 'GeoBlockRule',
-      priority: 50,
+      priority: 40,
       action: { allow: {} },
       statement: {
         geoMatchStatement: {
@@ -151,8 +108,6 @@ function getWafRules(type: 'CloudFront' | 'ApiGateway'): wafv2.CfnWebACL.RulePro
         metricName: 'GeoBlockRuleMetrics',
         sampledRequestsEnabled: true,
       }
-    });
-  }
-
-  return rules;
+    }
+  ];
 }

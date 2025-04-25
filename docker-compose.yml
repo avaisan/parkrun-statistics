@@ -15,24 +15,6 @@ services:
       timeout: 5s
       retries: 5
 
-  api:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile.dev
-    environment:
-      DATABASE_URL: postgresql://parkrun:parkrun@postgres:5432/parkrun?schema=public
-      NODE_ENV: development
-      PORT: 3001
-    volumes:
-      - ./backend:/app/backend
-      - /app/backend/node_modules
-      - /app/prisma/node_modules
-    ports:
-      - "3001:3001"
-    depends_on:
-      postgres:
-        condition: service_healthy
-
   frontend:
     build:
       context: ./frontend

@@ -3,7 +3,7 @@ import { Container, Typography, Box, Paper, Stack, Link } from '@mui/material';
 import { StatsTable } from './components/StatsTable';
 import { LastUpdated } from './components/LastUpdated';
 import { QuarterlyStats } from './types';
-import { getQuarterlyStats } from './services/api';
+import { parkrunStats } from './data/parkrun-data';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
@@ -12,22 +12,15 @@ function App() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const statsData = await getQuarterlyStats();
-                if (!statsData) throw new Error('No data received');
-                setStats(statsData);
-                setError(null);
-            } catch (err) {
-                setError(err instanceof Error ? err.message : 'Failed to fetch data');
-                console.error('Error fetching data:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
+        try {
+            setStats(parkrunStats.event_quarterly_stats);
+            setError(null);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to load data');
+            console.error('Error loading data:', err);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
     if (loading) {

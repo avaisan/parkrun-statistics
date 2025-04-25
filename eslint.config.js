@@ -47,18 +47,6 @@ export default tseslint.config(
     }
   },
   {
-    // Backend specific config
-    files: ['backend/**/*.ts'],
-    languageOptions: {
-      globals: {
-        ...globals.node
-      }
-    },
-    rules: {
-      'no-console': 'off' // Allow console logs in backend
-    }
-  },
-  {
     // Scraper specific config
     files: ['scraper/**/*.ts'],
     languageOptions: {

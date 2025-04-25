@@ -18,5 +18,9 @@ export default defineConfig({
         secure: false
       }
     }
+  },
+  assetsInclude: ['**/*.json'],
+  json: {
+    stringify: true
   }
 })

@@ -1,5 +1,6 @@
 # Custom
 data-export/
+**/src/data/parkrun-data.ts
 
 # Dependencies
 node_modules/

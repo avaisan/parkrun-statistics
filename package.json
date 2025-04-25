@@ -4,21 +4,18 @@
   "type": "module",
   "workspaces": [
     "frontend",
-    "backend",
     "scraper",
     "prisma",
     "cdk"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "frontend": "npm run ui -w frontend",
     "db": "docker compose up -d postgres",
     "db:migrate": "npx prisma migrate deploy",
     "db:reset": "docker-compose down -v && docker-compose up -d postgres && npx prisma migrate reset --force",
     "db:studio": "npx prisma studio",
-    "api": "npm run api -w backend",
     "scraper": "npm run scraper -w scraper",
-    "deploy": "npm run deploy -w cdk",
+    "frontend": "npm run ui -w frontend",
     "lint": "npm run lint --workspaces",
     "clean": "npm run clean --workspaces"
   },

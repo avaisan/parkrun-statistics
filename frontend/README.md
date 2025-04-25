@@ -11,12 +11,29 @@ A React-based frontend application for displaying parkrun statistics from Nordic
 ## Prerequisites
 
 - Node.js v22.14.0 or later
-- Backend and database
+- Source data provided in correct format
 
 ## Installation and development
 
-1. Start backend.
-
+1. Provide source data as TS file to `src/data/parkrun-data.ts`:
+```typescript
+export const parkrunStats = {
+  latest_date: "YYYY-MM-DD",
+  event_quarterly_stats: [
+    {
+      eventName: string,
+      eventCountry: string,
+      year: number,
+      quarter: number,
+      fastest_time: number,
+      fastest_quartile: number,
+      avg_finish_time: number,
+      slowest_quartile: number,
+      avg_participants: number
+    }
+  ]
+};
+```
 2. Install dependencies and build:
 ```bash
 npm install
@@ -45,19 +62,15 @@ frontend/
 │   │   └── LastUpdated.tsx
 │   │   └── ErrorBoundary.tsx
 │   ├── services/
-│   │   └── api.ts
 │   │   └── time_format.ts # The only "calculation" done in UI.
+│   ├── data/
+│   │   └── parkrun-data.ts # Source data
 │   ├── App.tsx        # Main application component
 │   ├── main.tsx       # Application entry point
 │   └── theme.ts       # Material-UI theme configuration
 ```
 
-## API Integration
 
-The frontend expects a backend API running at `http://localhost:3001` providing:
-
-- `/api/stats` - GET endpoint returning quarterly statistics.
-- `/api/latest-date` - GET endpoint for latest event date available.
 
 ## Technology Stack
 
@@ -65,4 +78,3 @@ The frontend expects a backend API running at `http://localhost:3001` providing:
 - TypeScript
 - Vite
 - Material-UI v7
-- Axios for API calls
