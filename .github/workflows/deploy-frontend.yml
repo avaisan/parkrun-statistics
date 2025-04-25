@@ -1,20 +1,17 @@
 name: Deploy Frontend
 
 on:
+  workflow_run:
+    workflows: ["Deploy Infrastructure"]
+    types:
+      - completed
+    branches: [main]
   push:
     branches: [ main ]
     paths:
       - 'frontend/**'
       - '.github/workflows/deploy-frontend.yml'
       - '!**.md'
-      - '!**/*.md'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/deploy-frontend.yml'
-      - '!**.md'
-      - '!**/*.md'
   workflow_dispatch:
 
 permissions:
@@ -24,7 +21,7 @@ permissions:
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     
     steps:
       - uses: actions/checkout@v4

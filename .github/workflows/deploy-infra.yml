@@ -5,28 +5,9 @@ on:
     branches: [ main ]
     paths:
       - 'cdk/**'
-      - 'lib/**'
       - '.github/workflows/deploy-infra.yml'
       - '!**.md'
-      - '!**/*.md'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'cdk/**'
-      - 'lib/**'
-      - '.github/workflows/deploy-infra.yml'
-      - '!**.md'
-      - '!**/*.md'
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy (dev/prod)'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - prod
 
 permissions:
   id-token: write
@@ -35,7 +16,6 @@ permissions:
 jobs:
   deploy-infrastructure:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
     
     steps:
       - uses: actions/checkout@v4
@@ -58,10 +38,6 @@ jobs:
           npm ci
           
       - name: Deploy Infrastructure
-        env:
-          ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          DATABASE_NAME: parkrun
         run: |
           cd cdk
           npm run deploy -- --require-approval never
