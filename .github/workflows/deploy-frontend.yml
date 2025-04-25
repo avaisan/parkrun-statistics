@@ -48,12 +48,7 @@ jobs:
           cd frontend
           npm run build
           
-      - name: Debug Role
-        run: |
-          aws sts get-caller-identity
-          aws s3 ls s3://${{ secrets.FRONTEND_BUCKET }}
-          
-      - name: Deploy Frontend
+      - name: Deploy Frontend and invalidate CloudFront
         run: |
           aws s3 sync frontend/dist s3://${{ secrets.FRONTEND_BUCKET }} --delete
           aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths "/*"
