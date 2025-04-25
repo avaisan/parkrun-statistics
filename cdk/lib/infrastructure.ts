@@ -11,7 +11,9 @@ export class ParkRunStack extends cdk.Stack {
     const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+      encryption: s3.BucketEncryption.S3_MANAGED,
       autoDeleteObjects: true,
+      enforceSSL: true
     });
 
     const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, 'OAI');
@@ -22,6 +24,7 @@ export class ParkRunStack extends cdk.Stack {
         origin: new origins.S3Origin(websiteBucket, { originAccessIdentity }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        compress: true
       },
       defaultRootObject: 'index.html',
       errorResponses: [
@@ -37,7 +40,8 @@ export class ParkRunStack extends cdk.Stack {
           responsePagePath: '/500.html',
           ttl: cdk.Duration.minutes(0)
         },
-      ]
+      ],
+      minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021
     });
 
     new cdk.CfnOutput(this, 'DistributionDomain', {
