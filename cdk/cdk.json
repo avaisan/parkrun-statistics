@@ -12,6 +12,9 @@
         "region": "eu-central-1",
         "environmentName": "prod"
       }
-    }
+    },
+    "accountId": "${AWS_ACCOUNT_ID}",
+    "hostedZoneId": "${HOSTED_ZONE_ID}",
+    "domainName": "${DOMAIN_NAME}"
   }
 }

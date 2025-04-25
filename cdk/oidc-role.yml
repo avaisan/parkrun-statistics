@@ -44,7 +44,33 @@ Resources:
                   - logs:*
                   - iam:*
                 Resource: "*"
+
+              # Route53 permissions for domain management
+              - Effect: Allow
+                Action:
+                  - route53:GetHostedZone
+                  - route53:ListHostedZones
+                  - route53:GetHostedZoneCount
+                  - route53:ChangeResourceRecordSets
+                  - route53:ListResourceRecordSets
+                Resource: 
+                  - !Sub "arn:aws:route53:::hostedzone/*"
               
+              # ACM permissions for certificate
+              - Effect: Allow
+                Action:
+                  - acm:RequestCertificate
+                  - acm:DescribeCertificate
+                  - acm:DeleteCertificate
+                  - acm:ListCertificates
+                  - acm:AddTagsToCertificate
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - acm:RequestCertificate
+                  - acm:DescribeCertificate
+                Resource: !Sub "arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/*"
+
               # S3 permissions
               - Effect: Allow
                 Action:
