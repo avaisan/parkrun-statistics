@@ -42,21 +42,33 @@ jobs:
         id: deploy
         run: |
           cd cdk
-          OUTPUTS=$(npm run deploy -- --require-approval never --outputs-file outputs.json)
+          # Deploy and save outputs
+          npm run deploy -- --require-approval never --outputs-file outputs.json
           
-          BUCKET_NAME=$(jq -r '.ParkrunStaticSite.BucketName' outputs.json)
-          DISTRIBUTION_ID=$(jq -r '.ParkrunStaticSite.DistributionId' outputs.json)
+          # Debug outputs file
+          echo "Contents of outputs.json:"
+          cat outputs.json
           
+          # Extract values using proper stack name
+          STACK_NAME="ParkRunStack" # Adjust this to match your actual stack name
+          BUCKET_NAME=$(jq -r ".[\"$STACK_NAME\"].BucketName" outputs.json)
+          DISTRIBUTION_ID=$(jq -r ".[\"$STACK_NAME\"].DistributionId" outputs.json)
+          
+          # Debug extracted values
+          echo "Extracted Bucket Name: $BUCKET_NAME"
+          echo "Extracted Distribution ID: $DISTRIBUTION_ID"
+          
+          # Set outputs
           echo "bucket_name=${BUCKET_NAME}" >> $GITHUB_OUTPUT
           echo "distribution_id=${DISTRIBUTION_ID}" >> $GITHUB_OUTPUT
-
+  
       - name: Update GitHub Secrets
         uses: gliech/create-github-secret-action@v1
         with:
           name: FRONTEND_BUCKET
           value: ${{ steps.deploy.outputs.bucket_name }}
           pa_token: ${{ secrets.GH_PA_TOKEN }}
-          
+            
       - name: Update Distribution ID
         uses: gliech/create-github-secret-action@v1
         with:
