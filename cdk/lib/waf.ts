@@ -1,15 +1,13 @@
 import * as cdk from 'aws-cdk-lib';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import { Construct } from 'constructs';
 
-export class CloudFrontWAFStack extends cdk.Stack {
+export class WAFStack extends cdk.NestedStack {
   public readonly webAcl: wafv2.CfnWebACL;
 
-  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
-    super(scope, id, {
-      ...props,
-      env: { region: 'us-east-1' }  // CloudFront WAF must be in us-east-1
-    });
+  constructor(scope: Construct, id: string, props?: cdk.NestedStackProps) {
+    super(scope, id, props);
 
     this.webAcl = new wafv2.CfnWebACL(this, 'CloudFrontWebACL', {
       defaultAction: { allow: {} },

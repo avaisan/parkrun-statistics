@@ -5,16 +5,14 @@ This project contains the AWS CDK infrastructure code for the ParkRun applicatio
 ## Architecture
 
 The infrastructure consists of:
-- CloudFront distribution for frontend
+- CloudFront distribution
+- S3 bucket for frontend code
 - Web Application Firewall with free, most common rule sets
+- CloudWatch log group for WAF logs
 
 ### CDK stacks
 - InfrastructureStack: S3, CloudFront
 - WAFStack: Web Application Firewall rules
-
-Infrastructure, database and backend stacks are created as Nested Stacks. Database and backend stacks reference resources created in infrastructure stack, so they are defined and deployed via BaseStack.
-
-Frontend stack references CloudFront WAF, which is global / deployed to us-east-1, so it is created as independent stack, as nested stacks seem to have a requirement of being in the same region.
 
 ### Environments
 Environments are managed via context. If another environment is desireable, just add or modify an account in `cdk.json` and run command e.g. `cdk deploy --all -c environment=prod` to deploy prod.
@@ -40,10 +38,7 @@ npm install && npm run build
 ```
 AWS_ROLE_ARN: ARN of the IAM role for GitHub Actions
 AWS_ACCOUNT_ID: Your AWS account ID
-LAMBDA_FUNCTION_NAME: Name of the Lambda function
-FRONTEND_BUCKET: S3 bucket URI
-CLOUDFRONT_ID: Cloudfront distribution id
-LAMBDA_FUNCTION_NAME
+GH_PA_TOKEN: PAT token with repo secret to read and write secrets
 ```
 2.1. If you plan to run cdk deploy locally, update `cdk.json` with correct AWS account IDs.
 2.2 CDK commands:
@@ -59,7 +54,5 @@ cdk destroy --all
 
 ### Security, monitoring, scalability considerations
 - Frontend is deployed to S3 for ease of deployment and cost savings
-- Though this is just a statistics app with little usage, I still deployed WAF in front of CloudFront and API Gateway. Access to frontend S3 bucket is restricted to CloudFront.
-- Database is in private subnet with no public access. It can only be accessed by backend API lambda with read-only access via RDS Data API, and via bastion host (IAM authentication, to update data).
-- Database is hosted in Aurora Serverless v2 to save on costs.
+- Though this is just a statistics app with little usage, I still deployed WAF in front of CloudFront. Access to frontend S3 bucket is restricted to CloudFront.
 - Logs, metrics go to CloudWatch so identifying access and usage patterns is doable.

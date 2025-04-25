@@ -3,10 +3,14 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import { Construct } from 'constructs';
+import { WAFStack } from './waf';
 
-export class ParkrunStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: cdk.StackProps & { webAclId: string }) {
+export class ParkRunStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    // Create WAF as nested stack
+    const wafStack = new WAFStack(this, 'WAFStack');
 
     const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -38,7 +42,7 @@ export class ParkrunStack extends cdk.Stack {
           ttl: cdk.Duration.minutes(0)
         },
       ],
-      webAclId: props.webAclId,
+      webAclId: wafStack.webAcl.attrArn,
     });
 
     new cdk.CfnOutput(this, 'DistributionDomain', {

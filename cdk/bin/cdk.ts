@@ -1,14 +1,9 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
-import { ParkrunStack } from '../lib/infrastructure';
-import { CloudFrontWAFStack } from '../lib/waf';
+import { ParkRunStack } from '../lib/infrastructure';
 
 const app = new cdk.App();
 
-const wafStack = new CloudFrontWAFStack(app, 'WAFStack');
-
-
-new ParkrunStack(app, 'ParkRunStats', {
-  env: { region: 'eu-central-1' },
-  webAclId: wafStack.webAcl.attrArn
+new ParkRunStack(app, 'ParkRunStack', {
+  env: { region: 'eu-central-1' }
 });

@@ -5,16 +5,12 @@
       "dev": {
         "account": "${AWS_ACCOUNT_ID}",
         "region": "eu-central-1",
-        "environmentName": "dev",
-        "allowedOrigins": [],
-        "bastionInstanceType": "t3.micro"
+        "environmentName": "dev"
       },
       "prod": {
         "account": "${AWS_ACCOUNT_ID}",
         "region": "eu-central-1",
-        "environmentName": "prod",
-        "allowedOrigins": [],
-        "bastionInstanceType": "t3.micro"
+        "environmentName": "prod"
       }
     }
   }
