@@ -6,13 +6,10 @@ This project contains the AWS CDK infrastructure code for the ParkRun applicatio
 
 The infrastructure consists of:
 - CloudFront distribution
+- Route53 hosted zone management
+- ACM creation and management
 - S3 bucket for frontend code
-- Web Application Firewall with free, most common rule sets
-- CloudWatch log group for WAF logs
 
-### CDK stacks
-- InfrastructureStack: S3, CloudFront
-- WAFStack: Web Application Firewall rules
 
 ### Environments
 Environments are managed via context. If another environment is desireable, just add or modify an account in `cdk.json` and run command e.g. `cdk deploy --all -c environment=prod` to deploy prod.
@@ -52,7 +49,7 @@ cdk destroy --all
 5. Deploy backend with `deploy-backend`.
 6. Deploy frontend with `deploy-frontend`.
 
-### Security, monitoring, scalability considerations
-- Frontend is deployed to S3 for ease of deployment and cost savings
-- Though this is just a statistics app with little usage, I still deployed WAF in front of CloudFront. Access to frontend S3 bucket is restricted to CloudFront.
+### Security, monitoring
+- Frontend is deployed to S3 for ease of deployment and cost savings.
+- S3 is only accessible from CloudFront distribution.
 - Logs, metrics go to CloudWatch so identifying access and usage patterns is doable.

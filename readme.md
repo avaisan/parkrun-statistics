@@ -42,6 +42,9 @@ This might fail to captcha. I won't instruct here how to get past that.
 - AWS_ACCOUNT_ID
 - FRONTEND_BUCKET
 - CLOUDFRONT_ID
+- HOSTED_ZONE_ID
+As repo variable, add domain name (e.g. yourdomain.com).
+
 3. Push changes to main branch - observe pipelines triggering. Run `deploy-infra.yml` first so you have infrastructure. Then `deploy-frontend` have something to push into.
 
 Once infrastructure is provisioned and frontend pipeline has run, the website is accessible in the CloudFront URL.
