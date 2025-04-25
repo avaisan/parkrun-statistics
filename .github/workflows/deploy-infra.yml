@@ -12,6 +12,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  actions: write
 
 jobs:
   deploy-infrastructure:
@@ -38,6 +39,27 @@ jobs:
           npm ci
           
       - name: Deploy Infrastructure
+        id: deploy
         run: |
           cd cdk
-          npm run deploy -- --require-approval never
+          OUTPUTS=$(npm run deploy -- --require-approval never --outputs-file outputs.json)
+          
+          BUCKET_NAME=$(jq -r '.ParkrunStaticSite.BucketName' outputs.json)
+          DISTRIBUTION_ID=$(jq -r '.ParkrunStaticSite.DistributionId' outputs.json)
+          
+          echo "bucket_name=${BUCKET_NAME}" >> $GITHUB_OUTPUT
+          echo "distribution_id=${DISTRIBUTION_ID}" >> $GITHUB_OUTPUT
+
+      - name: Update GitHub Secrets
+        uses: gliech/create-github-secret-action@v1
+        with:
+          name: FRONTEND_BUCKET
+          value: ${{ steps.deploy.outputs.bucket_name }}
+          pa_token: ${{ secrets.GH_PA_TOKEN }}
+          
+      - name: Update Distribution ID
+        uses: gliech/create-github-secret-action@v1
+        with:
+          name: CLOUDFRONT_ID
+          value: ${{ steps.deploy.outputs.distribution_id }}
+          pa_token: ${{ secrets.GH_PA_TOKEN }}

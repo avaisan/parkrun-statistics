@@ -2,25 +2,15 @@
 
 This project contains the AWS CDK infrastructure code for the ParkRun application.
 
-CDK is only used to deploy infrastructure. All stacks deploy empty databases, empty lambda, empty S3 bucket. Other workflows are used to deploy application code.
-
 ## Architecture
 
 The infrastructure consists of:
-- VPC with public and private subnets
-- Aurora Serverless v2 PostgreSQL database
-- Lambda-based API with REST API Gateway
 - CloudFront distribution for frontend
-- WAF protection for both API Gateway and CloudFront
-- Bastion host for database access
-- IAM roles and security configurations
+- Web Application Firewall with free, most common rule sets
 
 ### CDK stacks
-- InfrastructureStack: VPC, Bastion host
+- InfrastructureStack: S3, CloudFront
 - WAFStack: Web Application Firewall rules
-- DatabaseStack: Aurora Serverless v2 cluster
-- BackendStack: Lambda function, API Gateway
-- FrontendStack: S3 bucket, CloudFront
 
 Infrastructure, database and backend stacks are created as Nested Stacks. Database and backend stacks reference resources created in infrastructure stack, so they are defined and deployed via BaseStack.
 

@@ -61,4 +61,5 @@ PORT=3001
 ### Deployments
 - CDK is used only to provision infrastructure. It does not deploy application code.
 - Frontend pipeline triggers when changes are done to `frontend` folder on main branch.
+- CDK pipeline uses GitHub action that writes S3 bucket and Cloudfront ID into GitHub repo secrets, which frontend deployment uses to deploy code.
 

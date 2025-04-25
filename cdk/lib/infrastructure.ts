@@ -44,5 +44,13 @@ export class ParkrunStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'DistributionDomain', {
       value: distribution.distributionDomainName,
     });
+
+    new cdk.CfnOutput(this, 'DistributionId', {
+      value: distribution.distributionId,
+    });
+
+    new cdk.CfnOutput(this, 'BucketName', {
+      value: websiteBucket.bucketName,
+    });
   }
 }
