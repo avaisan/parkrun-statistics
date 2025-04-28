@@ -69,6 +69,8 @@ export class ParkRunStack extends cdk.Stack {
       ],
       minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021
     });
+    
+    (distribution.node.defaultChild as cdk.CfnResource).cfnOptions.deletionPolicy = cdk.CfnDeletionPolicy.DELETE;
 
     new route53.ARecord(this, 'ParkRunRecord', {
       zone: hostedZone,

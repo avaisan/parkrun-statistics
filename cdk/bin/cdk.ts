@@ -17,6 +17,7 @@ if (!envConfig) {
 }
 
 new ParkRunStack(app, `ParkRunStack-${targetEnv}`, {
+  stackName: `parkrun-stack-${targetEnv}`,
   env: { 
     region: envConfig.region,
     account: accountId
