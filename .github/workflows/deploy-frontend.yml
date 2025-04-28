@@ -17,7 +17,7 @@ on:
       environment:
         description: 'Environment to deploy (dev/prod)'
         required: true
-        default: 'prod'
+        default: 'dev'
         type: choice
         options:
           - dev
@@ -30,7 +30,7 @@ permissions:
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'prod' }}
+    environment: ${{ github.event.inputs.environment || 'dev' }}
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     
     steps:
@@ -55,14 +55,14 @@ jobs:
           
       - name: Build Frontend
         env:
-          TARGET_ENV: ${{ github.event.inputs.environment || 'prod' }}
+          TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
         run: |
           cd frontend
           npm run build
             
       - name: Deploy Frontend and invalidate CloudFront
         env:
-          TARGET_ENV: ${{ github.event.inputs.environment || 'PROD' }}
+          TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
         run: |
           aws s3 sync frontend/dist s3://${{ secrets[format('FRONTEND_BUCKET_{0}', env.TARGET_ENV)] }} --delete
           aws cloudfront create-invalidation --distribution-id ${{ secrets[format('CLOUDFRONT_ID_{0}', env.TARGET_ENV)] }} --paths "/*"

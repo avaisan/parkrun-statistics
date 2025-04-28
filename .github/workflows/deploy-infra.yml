@@ -12,7 +12,7 @@ on:
       environment:
         description: 'Environment to deploy (dev/prod)'
         required: true
-        default: 'prod'
+        default: 'dev'
         type: choice
         options:
           - dev
@@ -53,28 +53,36 @@ jobs:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
-          TARGET_ENV: ${{ github.event.inputs.environment || 'prod' }}
+          TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
         run: |
           cd cdk
           npm run deploy -- --require-approval never --outputs-file outputs.json
-            
+
+          # Debug outputs file
+          echo "Contents of outputs.json:"
+          cat outputs.json
+          
           STACK_NAME="ParkRunStack-${TARGET_ENV}"
           BUCKET_NAME=$(jq -r ".[\"$STACK_NAME\"].BucketName" outputs.json)
           DISTRIBUTION_ID=$(jq -r ".[\"$STACK_NAME\"].DistributionId" outputs.json)
-            
+          
+          # Debug extracted values
+          echo "Extracted Bucket Name: $BUCKET_NAME"
+          echo "Extracted Distribution ID: $DISTRIBUTION_ID"
+
           echo "bucket_name=${BUCKET_NAME}" >> $GITHUB_OUTPUT
           echo "distribution_id=${DISTRIBUTION_ID}" >> $GITHUB_OUTPUT
   
-      - name: Update GitHub Secrets
+      - name: Update GitHub Secrets Bucket Name
         uses: gliech/create-github-secret-action@v1
         with:
-          name: FRONTEND_BUCKET_${{ github.event.inputs.environment || 'PROD' }}
+          name: FRONTEND_BUCKET_${{ github.event.inputs.environment || 'dev' }}
           value: ${{ steps.deploy.outputs.bucket_name }}
           pa_token: ${{ secrets.GH_PA_TOKEN }}
               
-      - name: Update Distribution ID
+      - name: Update GitHub Secrets Distribution ID
         uses: gliech/create-github-secret-action@v1
         with:
-          name: CLOUDFRONT_ID_${{ github.event.inputs.environment || 'PROD' }}
+          name: CLOUDFRONT_ID_${{ github.event.inputs.environment || 'dev' }}
           value: ${{ steps.deploy.outputs.distribution_id }}
           pa_token: ${{ secrets.GH_PA_TOKEN }}
