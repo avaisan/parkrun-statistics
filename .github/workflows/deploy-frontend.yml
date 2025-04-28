@@ -48,17 +48,17 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: eu-central-1
           
-      - name: Install Dependenciesith
+      - name: Install Dependencies
         run: |
           cd frontend
           npm ci
           
-          - name: Build Frontend
-          env:
-            TARGET_ENV: ${{ github.event.inputs.environment || 'prod' }}
-          run: |
-            cd frontend
-            npm run build
+      - name: Build Frontend
+        env:
+          TARGET_ENV: ${{ github.event.inputs.environment || 'prod' }}
+        run: |
+          cd frontend
+          npm run build
             
       - name: Deploy Frontend and invalidate CloudFront
         env:
