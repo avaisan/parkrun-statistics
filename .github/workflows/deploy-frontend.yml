@@ -13,6 +13,15 @@ on:
       - '.github/workflows/deploy-frontend.yml'
       - '!**.md'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to (dev/prod)'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - dev
+          - prod
 
 permissions:
   id-token: write

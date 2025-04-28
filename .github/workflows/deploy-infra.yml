@@ -8,6 +8,15 @@ on:
       - '.github/workflows/deploy-infra.yml'
       - '!**.md'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy (dev/prod)'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - dev
+          - prod
 
 permissions:
   id-token: write
@@ -46,23 +55,12 @@ jobs:
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
         run: |
           cd cdk
-          # Deploy and save outputs
           npm run deploy -- --require-approval never --outputs-file outputs.json
           
-          # Debug outputs file
-          echo "Contents of outputs.json:"
-          cat outputs.json
-          
-          # Extract values using proper stack name
-          STACK_NAME="ParkRunStack" # Adjust this to match your actual stack name
+          STACK_NAME="ParkRunStack"
           BUCKET_NAME=$(jq -r ".[\"$STACK_NAME\"].BucketName" outputs.json)
           DISTRIBUTION_ID=$(jq -r ".[\"$STACK_NAME\"].DistributionId" outputs.json)
           
-          # Debug extracted values
-          echo "Extracted Bucket Name: $BUCKET_NAME"
-          echo "Extracted Distribution ID: $DISTRIBUTION_ID"
-          
-          # Set outputs
           echo "bucket_name=${BUCKET_NAME}" >> $GITHUB_OUTPUT
           echo "distribution_id=${DISTRIBUTION_ID}" >> $GITHUB_OUTPUT
   

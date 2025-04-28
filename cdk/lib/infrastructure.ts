@@ -10,19 +10,20 @@ import { Construct } from 'constructs';
 interface ParkRunStackProps extends cdk.StackProps {
   domainName: string;
   hostedZoneId: string;
+  environmentName: string;
+  subdomain: string;
 }
 
 export class ParkRunStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ParkRunStackProps) {
     super(scope, id, props);
 
-    const subdomain = 'parkrun';
-    const fullDomain = `${subdomain}.${props.domainName}`;
+    const fullDomain = `${props.subdomain}.${props.domainName}`;
 
     const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
       hostedZoneId: props.hostedZoneId,
       zoneName: props.domainName
-    });
+    });;
 
     const certificate = new acm.DnsValidatedCertificate(this, 'Certificate', {
       domainName: fullDomain,
@@ -30,7 +31,8 @@ export class ParkRunStack extends cdk.Stack {
       region: 'us-east-1',
     });;
 
-    const websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
+    const websiteBucket = new s3.Bucket(this, 'XXXXXXXXXXXXX', {
+      bucketName: `${props.subdomain}-${props.environmentName}-${this.account}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       encryption: s3.BucketEncryption.S3_MANAGED,
@@ -70,15 +72,7 @@ export class ParkRunStack extends cdk.Stack {
 
     new route53.ARecord(this, 'ParkRunRecord', {
       zone: hostedZone,
-      recordName: subdomain,
-      target: route53.RecordTarget.fromAlias(
-        new targets.CloudFrontTarget(distribution)
-      )
-    });
-
-    new route53.ARecord(this, 'WwwRecord', {
-      zone: hostedZone,
-      recordName: 'www',
+      recordName: props.subdomain,
       target: route53.RecordTarget.fromAlias(
         new targets.CloudFrontTarget(distribution)
       )

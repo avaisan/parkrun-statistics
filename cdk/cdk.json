@@ -5,12 +5,14 @@
       "dev": {
         "account": "${AWS_ACCOUNT_ID}",
         "region": "eu-central-1",
-        "environmentName": "dev"
+        "environmentName": "dev",
+        "subdomain": "parkrun-dev"
       },
       "prod": {
         "account": "${AWS_ACCOUNT_ID}",
         "region": "eu-central-1",
-        "environmentName": "prod"
+        "environmentName": "prod",
+        "subdomain": "parkrun"
       }
     },
     "accountId": "${AWS_ACCOUNT_ID}",
