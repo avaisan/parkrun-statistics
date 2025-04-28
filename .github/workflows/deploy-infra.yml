@@ -17,11 +17,6 @@ on:
         options:
           - dev
           - prod
-      force_destroy:
-        description: 'Force destroy and recreate resources'
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   id-token: write
@@ -58,14 +53,15 @@ jobs:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
           DOMAIN_NAME: ${{ vars.DOMAIN_NAME }}
+          TARGET_ENV: ${{ github.event.inputs.environment || 'prod' }}
         run: |
           cd cdk
           npm run deploy -- --require-approval never --outputs-file outputs.json
-          
-          STACK_NAME="ParkRunStack"
+            
+          STACK_NAME="ParkRunStack-${TARGET_ENV}"
           BUCKET_NAME=$(jq -r ".[\"$STACK_NAME\"].BucketName" outputs.json)
           DISTRIBUTION_ID=$(jq -r ".[\"$STACK_NAME\"].DistributionId" outputs.json)
-          
+            
           echo "bucket_name=${BUCKET_NAME}" >> $GITHUB_OUTPUT
           echo "distribution_id=${DISTRIBUTION_ID}" >> $GITHUB_OUTPUT
   
