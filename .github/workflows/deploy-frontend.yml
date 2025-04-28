@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to deploy to (dev/prod)'
+        description: 'Environment to deploy (dev/prod)'
         required: true
         default: 'prod'
         type: choice
@@ -30,6 +30,7 @@ permissions:
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'prod' }}
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     
     steps:
@@ -47,17 +48,21 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: eu-central-1
           
-      - name: Install Dependencies
+      - name: Install Dependenciesith
         run: |
           cd frontend
           npm ci
           
-      - name: Build Frontend
-        run: |
-          cd frontend
-          npm run build
-          
+          - name: Build Frontend
+          env:
+            TARGET_ENV: ${{ github.event.inputs.environment || 'prod' }}
+          run: |
+            cd frontend
+            npm run build
+            
       - name: Deploy Frontend and invalidate CloudFront
+        env:
+          TARGET_ENV: ${{ github.event.inputs.environment || 'PROD' }}
         run: |
-          aws s3 sync frontend/dist s3://${{ secrets.FRONTEND_BUCKET }} --delete
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_ID }} --paths "/*"
+          aws s3 sync frontend/dist s3://${{ secrets[format('FRONTEND_BUCKET_{0}', env.TARGET_ENV)] }} --delete
+          aws cloudfront create-invalidation --distribution-id ${{ secrets[format('CLOUDFRONT_ID_{0}', env.TARGET_ENV)] }} --paths "/*"
