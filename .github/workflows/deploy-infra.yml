@@ -68,13 +68,13 @@ jobs:
       - name: Update GitHub Secrets
         uses: gliech/create-github-secret-action@v1
         with:
-          name: FRONTEND_BUCKET
+          name: FRONTEND_BUCKET_${{ github.event.inputs.environment || 'PROD' }}
           value: ${{ steps.deploy.outputs.bucket_name }}
           pa_token: ${{ secrets.GH_PA_TOKEN }}
-            
+              
       - name: Update Distribution ID
         uses: gliech/create-github-secret-action@v1
         with:
-          name: CLOUDFRONT_ID
+          name: CLOUDFRONT_ID_${{ github.event.inputs.environment || 'PROD' }}
           value: ${{ steps.deploy.outputs.distribution_id }}
           pa_token: ${{ secrets.GH_PA_TOKEN }}
