@@ -61,14 +61,14 @@ jobs:
           # Debug outputs file
           echo "Contents of outputs.json:"
           cat outputs.json
-          
-          STACK_NAME="ParkRunStack-${TARGET_ENV}"
+
+          STACK_NAME="parkrun-stack-${TARGET_ENV}"
           BUCKET_NAME=$(jq -r ".[\"$STACK_NAME\"].BucketName" outputs.json)
           DISTRIBUTION_ID=$(jq -r ".[\"$STACK_NAME\"].DistributionId" outputs.json)
           
-          # Debug extracted values
-          echo "Extracted Bucket Name: $BUCKET_NAME"
-          echo "Extracted Distribution ID: $DISTRIBUTION_ID"
+          # Debug
+          echo "Bucket Name: $BUCKET_NAME"
+          echo "Distribution ID: $DISTRIBUTION_ID"
 
           echo "bucket_name=${BUCKET_NAME}" >> $GITHUB_OUTPUT
           echo "distribution_id=${DISTRIBUTION_ID}" >> $GITHUB_OUTPUT
