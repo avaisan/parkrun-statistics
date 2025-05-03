@@ -1,26 +1,37 @@
 import { readFile } from 'fs/promises';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const s3Client = new S3Client({});
+const bucketName = process.env.WEBSITE_BUCKET_NAME;
+const statsFilePath = process.env.STATS_FILE_PATH || 'data/parkrun-data.json';
+const dateFilePath = process.env.DATE_FILE_PATH || 'data/latest_date.json';
 
-// Helper to get data directory path
-const getDataPath = () => {
-    // In Docker, data is mounted at /app/data
-    if (process.env.NODE_ENV === 'development') {
-        return '/app/data';
+async function readFromS3(key: string) {
+    if (!bucketName) {
+        throw new Error('WEBSITE_BUCKET_NAME environment variable not set');
     }
-    // Local development
-    return join(__dirname, '../../../data');
-};
+
+    const command = new GetObjectCommand({
+        Bucket: bucketName,
+        Key: key
+    });
+
+    const response = await s3Client.send(command);
+    const str = await response.Body?.transformToString();
+    return JSON.parse(str || '{}');
+}
 
 export async function readEventStats() {
     try {
-        const dataDir = getDataPath();
-        const filePath = join(dataDir, 'parkrun-data.json');
-        const data = await readFile(filePath, 'utf-8');
-        return JSON.parse(data);
+        if (process.env.NODE_ENV === 'development') {
+            const dataDir = '/app/data';
+            const filePath = join(dataDir, 'parkrun-data.json');
+            const data = await readFile(filePath, 'utf-8');
+            return JSON.parse(data);
+        }
+        
+        return await readFromS3(statsFilePath);
     } catch (error) {
         console.error('Error reading event stats:', error);
         throw new Error('Failed to read event statistics');
@@ -29,10 +40,14 @@ export async function readEventStats() {
 
 export async function readLatestDate() {
     try {
-        const dataDir = getDataPath();
-        const filePath = join(dataDir, 'latest_date.json');
-        const data = await readFile(filePath, 'utf-8');
-        return JSON.parse(data);
+        if (process.env.NODE_ENV === 'development') {
+            const dataDir = '/app/data';
+            const filePath = join(dataDir, 'latest_date.json');
+            const data = await readFile(filePath, 'utf-8');
+            return JSON.parse(data);
+        }
+
+        return await readFromS3(dateFilePath);
     } catch (error) {
         console.error('Error reading latest date:', error);
         throw new Error('Failed to read latest date');
