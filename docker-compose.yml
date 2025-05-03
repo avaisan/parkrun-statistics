@@ -15,6 +15,21 @@ services:
       timeout: 5s
       retries: 5
 
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./api:/app
+      - ./data:/app/data
+      - /app/node_modules
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - FRONTEND_URL=http://localhost:5173
+      - NODE_ENV=development
+
   frontend:
     build:
       context: ./frontend
@@ -24,6 +39,8 @@ services:
       - /app/node_modules
     ports:
       - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3001
     depends_on:
       - api
 

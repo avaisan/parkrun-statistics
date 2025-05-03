@@ -1,26 +1,46 @@
-import { Typography, Box } from '@mui/material';
-import { parkrunStats } from '../data/parkrun-data';
+import { useState, useEffect } from 'react';
+import { Typography } from '@mui/material';
+import { getLatestEventDate } from '../services/api';
 
 export const LastUpdated = () => {
-    const formatDate = (dateString: string) => {
-        try {
-            const date = new Date(dateString);
-            return new Intl.DateTimeFormat('fi-FI', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            }).format(date);
-        } catch (error) {
-            console.error('Error formatting date:', error);
-            return 'Date not available';
-        }
-    };
+  const [latestDate, setLatestDate] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
 
-    return (
-        <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
-            <Typography variant="body2" color="text.secondary">
-                Last updated: {formatDate(parkrunStats.latest_date)}
-            </Typography>
-        </Box>
-    );
+  useEffect(() => {
+    const fetchLatestDate = async () => {
+        try {
+            const response = await getLatestEventDate();
+            console.log('Received response:', response);
+            if (response?.latest_date) {
+                setLatestDate(response.latest_date);
+            }
+        } catch (err) {
+            setError('Failed to fetch latest update date');
+            console.error('Error fetching date:', err);
+        }
+    }
+    fetchLatestDate();
+  }, []);
+
+  if (error) {
+    throw new Error(error);
+  }
+
+  if (!latestDate) {
+    return null;
+  }
+
+  return (
+    <Typography 
+      variant="body2" 
+      color="text.secondary"
+      sx={{ 
+        position: 'absolute',
+        top: 8,
+        right: 16
+      }}
+    >
+      Last updated: {latestDate}
+    </Typography>
+  );
 };

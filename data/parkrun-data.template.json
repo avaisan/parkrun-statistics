@@ -1,0 +1,15 @@
+{
+  "event_quarterly_stats": [
+    {
+      "eventName": "lappeen Ranta",
+      "eventCountry": "Finland",
+      "year": 2025,
+      "quarter": 1,
+      "fastest_time": 20.00,
+      "fastest_quartile": 25.00,
+      "avg_finish_time": 30.00,
+      "slowest_quartile": 35.00,
+      "avg_participants": 50
+    }
+  ]
+}

@@ -11,9 +11,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: process.env.NODE_ENV === 'production' 
-          ? 'https://mypspzz9o6.execute-api.eu-central-1.amazonaws.com'
-          : 'http://api:3001',
+        target: process.env.VITE_API_URL,
         changeOrigin: true,
         secure: false
       }

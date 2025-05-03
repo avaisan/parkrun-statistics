@@ -1,0 +1,11 @@
+FROM node:23-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y openssl
+
+COPY package*.json ./
+RUN npm install
+RUN npm install -g tsx
+
+CMD ["npm", "run", "api"]
