@@ -8,6 +8,9 @@ import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import { Construct } from 'constructs';
 
 interface ParkRunStackProps extends cdk.StackProps {
@@ -83,11 +86,22 @@ export class ParkRunStack extends cdk.Stack {
       )
     });
 
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+
     const apiFunction = new lambda.Function(this, 'ParkRunApiFunction', {
       functionName: `parkrun-api-${props.environmentName}`,
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'dist/index.handler',
-      code: lambda.Code.fromAsset('api'),
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../api'), {
+        bundling: {
+          image: lambda.Runtime.NODEJS_22_X.bundlingImage,
+          command: [
+            'bash', '-c',
+            'npm install && npm run build && cp -r dist/* /asset-output/'
+          ]
+        }
+      }),
       environment: {
         NODE_ENV: props.environmentName,
         WEBSITE_BUCKET_NAME: websiteBucket.bucketName,

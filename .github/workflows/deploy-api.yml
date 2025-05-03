@@ -10,7 +10,6 @@ on:
     branches: [ main ]
     paths:
       - 'api/**'
-      - 'data/**'
       - '.github/workflows/deploy-api.yml'
       - '!**.md'
   workflow_dispatch:
