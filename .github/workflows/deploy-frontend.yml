@@ -56,6 +56,7 @@ jobs:
       - name: Build Frontend
         env:
           TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
+          VITE_API_URL: ${{ secrets[format('API_ENDPOINT_{0}', github.event.inputs.environment || 'dev')] }}
         run: |
           cd frontend
           npm run build
