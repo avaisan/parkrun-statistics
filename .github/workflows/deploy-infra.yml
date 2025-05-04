@@ -39,7 +39,7 @@ jobs:
       - name: Fix npm cache permissions
         run: |
           mkdir -p ~/.npm
-          sudo chown -R $(whoami) ~/.npm
+          sudo chown -R 1001:118 "/.npm"
           
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
