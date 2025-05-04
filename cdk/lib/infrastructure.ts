@@ -37,6 +37,13 @@ export class ParkRunStack extends cdk.Stack {
       region: 'us-east-1',
     });;
 
+    const dataBucket = new s3.Bucket(this, 'ParkRunDataBucket', {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      enforceSSL: true
+    });
+
     const websiteBucket = new s3.Bucket(this, 'ParkRunBucket', {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -132,7 +139,7 @@ export class ParkRunStack extends cdk.Stack {
       resources: ['*']
     }));
 
-    websiteBucket.grantRead(apiFunction);
+    dataBucket.grantRead(apiFunction);
 
     const api = new apigw.RestApi(this, 'ParkRunApi', {
       restApiName: `parkrun-api-${props.environmentName}`,
@@ -140,6 +147,7 @@ export class ParkRunStack extends cdk.Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: [`https://${props.subdomain}.${props.domainName}`],
         allowMethods: ['GET'],
+        allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key']
       },
     });
 
@@ -161,6 +169,12 @@ export class ParkRunStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'BucketName', {
       value: websiteBucket.bucketName,
+      description: 'S3 bucket for frontend files',
+    });
+
+    new cdk.CfnOutput(this, 'DataBucketName', {
+      value: dataBucket.bucketName,
+      description: 'S3 bucket for data files',
     });
 
     new cdk.CfnOutput(this, 'CertificateArn', {

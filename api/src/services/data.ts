@@ -3,14 +3,16 @@ import { join } from 'path';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
 const s3Client = new S3Client({});
-const bucketName = process.env.WEBSITE_BUCKET_NAME;
-const statsFilePath = process.env.STATS_FILE_PATH || 'data/parkrun-data.json';
-const dateFilePath = process.env.DATE_FILE_PATH || 'data/latest_date.json';
+const bucketName = process.env.DATA_BUCKET_NAME;
+const statsFilePath = process.env.STATS_FILE_PATH || 'parkrun-data.json';
+const dateFilePath = process.env.DATE_FILE_PATH || 'latest_date.json';
 
 async function readFromS3(key: string) {
     if (!bucketName) {
-        throw new Error('WEBSITE_BUCKET_NAME environment variable not set');
+        throw new Error('DATA_BUCKET_NAME environment variable not set');
     }
+
+    console.log(`Reading from S3 bucket: ${bucketName}, key: ${key}`);
 
     const command = new GetObjectCommand({
         Bucket: bucketName,
