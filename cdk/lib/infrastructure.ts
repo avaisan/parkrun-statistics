@@ -99,8 +99,7 @@ export class ParkRunStack extends cdk.Stack {
           command: [
             'bash', '-c',
             'mkdir -p /tmp/npm-cache && export HOME=/tmp && npm config set cache /tmp/npm-cache && npm install && npm run build && cp -r dist/* /asset-output/'
-          ],
-          user: '1000:1000'
+          ]
         }
       }),
       environment: {
