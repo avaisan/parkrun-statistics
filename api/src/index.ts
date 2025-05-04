@@ -2,7 +2,6 @@ import { APIGatewayProxyEvent, APIGatewayProxyHandler } from 'aws-lambda';
 import { readEventStats, readLatestDate } from './services/data.js';
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent) => {
-  try {
     const path = event.path;
     let responseBody;
     
@@ -37,15 +36,4 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       },
       body: JSON.stringify(responseBody)
     };
-  } catch (error: unknown) {
-    console.error('Error handling request:', error);
-    return {
-      statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify({ error: 'Internal server error' })
-    };
-  }
 };

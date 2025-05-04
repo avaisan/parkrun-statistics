@@ -98,8 +98,9 @@ export class ParkRunStack extends cdk.Stack {
           image: lambda.Runtime.NODEJS_22_X.bundlingImage,
           command: [
             'bash', '-c',
-            'npm install && npm run build && cp -r dist/* /asset-output/'
-          ]
+            'mkdir -p /tmp/npm-cache && export HOME=/tmp && npm config set cache /tmp/npm-cache && npm install && npm run build && cp -r dist/* /asset-output/'
+          ],
+          user: '1000:1000'
         }
       }),
       environment: {
