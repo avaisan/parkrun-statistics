@@ -38,7 +38,6 @@ export class ParkRunStack extends cdk.Stack {
     });;
 
     const websiteBucket = new s3.Bucket(this, 'ParkRunBucket', {
-      bucketName: `${props.subdomain}-${props.environmentName}-${this.account}`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       encryption: s3.BucketEncryption.S3_MANAGED,
