@@ -33,8 +33,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '23'
           cache: 'npm'
+          
+      - name: Fix npm cache permissions
+        run: |
+          mkdir -p ~/.npm
+          sudo chown -R $(whoami) ~/.npm
           
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
