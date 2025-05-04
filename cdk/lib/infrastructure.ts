@@ -102,6 +102,7 @@ export class ParkRunStack extends cdk.Stack {
               'cd /tmp/build',
               'npm install --no-fund --no-audit',
               'npm run build',
+              'echo \'{"type":"module"}\' > /asset-output/package.json',
               'cp -r dist/* /asset-output/'
             ].join(' && ')
           ],
@@ -112,11 +113,13 @@ export class ParkRunStack extends cdk.Stack {
         NODE_ENV: props.environmentName,
         WEBSITE_BUCKET_NAME: websiteBucket.bucketName,
         STATS_FILE_PATH: 'data/parkrun-data.json',
-        DATE_FILE_PATH: 'data/latest_date.json'
+        DATE_FILE_PATH: 'data/latest_date.json',
+        NODE_OPTIONS: '--experimental-specifier-resolution=node'
       },
       memorySize: 256,
       timeout: cdk.Duration.seconds(30),
     });
+    
     
 
     apiFunction.addToRolePolicy(new iam.PolicyStatement({
