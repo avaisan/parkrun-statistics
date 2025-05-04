@@ -1,5 +1,4 @@
-{
-"event_quarterly_stats": [
+[
 	{
 		"eventName" : "albygard",
 		"eventCountry" : "Norway",
@@ -781,4 +780,4 @@
 		"slowest_quartile" : 35.9,
 		"avg_participants" : 17.8695652173913043
 	}
-]}
+]

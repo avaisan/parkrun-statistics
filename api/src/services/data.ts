@@ -1,11 +1,12 @@
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { FILES } from '../config.js';
 
 const s3Client = new S3Client({});
 const bucketName = process.env.DATA_BUCKET_NAME;
-const statsFilePath = process.env.STATS_FILE_PATH || 'parkrun-data.json';
-const dateFilePath = process.env.DATE_FILE_PATH || 'latest_date.json';
+const statsFilePath = process.env.STATS_FILE_PATH ?? FILES.STATS;
+const dateFilePath = process.env.DATE_FILE_PATH ?? FILES.LATEST_DATE;
 
 async function readFromS3(key: string) {
     if (!bucketName) {
