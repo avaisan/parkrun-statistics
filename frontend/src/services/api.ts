@@ -9,7 +9,7 @@ interface IEventsResponse {
 
 export const getQuarterlyStats = async (): Promise<QuarterlyStats[]> => {
     try {
-        const response = await axios.get<IEventsResponse>(`${API_URL}/api/events`);
+        const response = await axios.get<IEventsResponse>(`${API_URL}api/events`);
         return response.data.event_quarterly_stats;
     } catch (error) {
         console.error('Error fetching stats:', error);
@@ -23,7 +23,7 @@ interface ILatestDateResponse {
 
 export const getLatestEventDate = async (): Promise<ILatestDateResponse> => {
     try {
-        const response = await axios.get(`${API_URL}/api/latest-date`);
+        const response = await axios.get(`${API_URL}api/latest-date`);
         return response.data;
     } catch (error) {
         console.error('Error fetching latest update date:', error);
