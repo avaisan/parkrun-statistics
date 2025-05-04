@@ -92,14 +92,21 @@ export class ParkRunStack extends cdk.Stack {
     const apiFunction = new lambda.Function(this, 'ParkRunApiFunction', {
       functionName: `parkrun-api-${props.environmentName}`,
       runtime: lambda.Runtime.NODEJS_22_X,
-      handler: 'dist/index.handler',
+      handler: 'index.handler',
       code: lambda.Code.fromAsset(path.join(__dirname, '../../api'), {
         bundling: {
           image: lambda.Runtime.NODEJS_22_X.bundlingImage,
           command: [
-            'bash', '-c',
-            'mkdir -p /tmp/npm-cache && export HOME=/tmp && npm config set cache /tmp/npm-cache && npm install && npm run build && cp -r dist/* /asset-output/'
-          ]
+            'bash', '-c', [
+              'mkdir -p /tmp/build',
+              'cp -r /asset-input/* /tmp/build',
+              'cd /tmp/build',
+              'npm install --no-fund --no-audit',
+              'npm run build',
+              'cp -r dist/* /asset-output/'
+            ].join(' && ')
+          ],
+          user: 'root'
         }
       }),
       environment: {
@@ -111,6 +118,7 @@ export class ParkRunStack extends cdk.Stack {
       memorySize: 256,
       timeout: cdk.Duration.seconds(30),
     });
+    
 
     apiFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
