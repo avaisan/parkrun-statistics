@@ -118,9 +118,9 @@ export class ParkRunStack extends cdk.Stack {
       }),
       environment: {
         NODE_ENV: props.environmentName,
-        WEBSITE_BUCKET_NAME: websiteBucket.bucketName,
-        STATS_FILE_PATH: 'data/parkrun-data.json',
-        DATE_FILE_PATH: 'data/latest_date.json',
+        DATA_BUCKET_NAME: dataBucket.bucketName,
+        STATS_FILE_PATH: 'parkrun-data.json',
+        DATE_FILE_PATH: 'latest_date.json',
         NODE_OPTIONS: '--experimental-specifier-resolution=node'
       },
       memorySize: 256,
