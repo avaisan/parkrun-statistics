@@ -10,30 +10,13 @@ A React-based frontend application for displaying ParkRun statistics from Nordic
 
 ## Prerequisites
 
-- Node.js v22.14.0 or later
-- Source data provided in correct format
+- Node.js v22 or later
+- API running either locally or in Docker
+- Source data in correct format
 
 ## Installation and development
 
-1. Provide source data as TS file to `src/data/parkrun-data.ts`:
-```typescript
-export const parkrunStats = {
-  latest_date: "YYYY-MM-DD",
-  event_quarterly_stats: [
-    {
-      eventName: string,
-      eventCountry: string,
-      year: number,
-      quarter: number,
-      fastest_time: number,
-      fastest_quartile: number,
-      avg_finish_time: number,
-      slowest_quartile: number,
-      avg_participants: number
-    }
-  ]
-};
-```
+1. Start API and provide source data in `data` folder.
 2. Install dependencies and build:
 ```bash
 npm install
