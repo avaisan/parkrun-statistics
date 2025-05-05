@@ -3,7 +3,7 @@ import { Container, Typography, Box, Paper, Stack, Link } from '@mui/material';
 import { StatsTable } from './components/StatsTable';
 import { LastUpdated } from './components/LastUpdated';
 import { QuarterlyStats } from './types';
-import { parkrunStats } from './data/parkrun-data';
+import { getQuarterlyStats } from './services/api';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
@@ -12,15 +12,24 @@ function App() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        try {
-            setStats(parkrunStats.event_quarterly_stats);
-            setError(null);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load data');
-            console.error('Error loading data:', err);
-        } finally {
-            setLoading(false);
-        }
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const stats = await getQuarterlyStats();
+                if (!Array.isArray(stats)) {
+                    throw new Error('Invalid data format received');
+                }
+                setStats(stats);
+                setError(null);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to fetch data');
+                console.error('Error fetching data:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
     }, []);
 
     if (loading) {

@@ -65,19 +65,29 @@ jobs:
           STACK_NAME="parkrun-stack-${TARGET_ENV}"
           BUCKET_NAME=$(jq -r ".[\"$STACK_NAME\"].BucketName" outputs.json)
           DISTRIBUTION_ID=$(jq -r ".[\"$STACK_NAME\"].DistributionId" outputs.json)
+          API_ENDPOINT=$(jq -r ".[\"$STACK_NAME\"].ApiEndpoint" outputs.json)
           
           # Debug
           echo "Bucket Name: $BUCKET_NAME"
           echo "Distribution ID: $DISTRIBUTION_ID"
+          echo "API Endpoint: $API_ENDPOINT"
 
           echo "bucket_name=${BUCKET_NAME}" >> $GITHUB_OUTPUT
           echo "distribution_id=${DISTRIBUTION_ID}" >> $GITHUB_OUTPUT
+          echo "api_endpoint=${API_ENDPOINT}" >> $GITHUB_OUTPUT
   
-      - name: Update GitHub Secrets Bucket Name
+      - name: Update GitHub Secrets Frontend Bucket Name
         uses: gliech/create-github-secret-action@v1
         with:
           name: FRONTEND_BUCKET_${{ github.event.inputs.environment || 'dev' }}
           value: ${{ steps.deploy.outputs.bucket_name }}
+          pa_token: ${{ secrets.GH_PA_TOKEN }}
+
+      - name: Update GitHub Secrets Data Bucket Name
+        uses: gliech/create-github-secret-action@v1
+        with:
+          name: DATA_BUCKET_${{ github.event.inputs.environment || 'dev' }}
+          value: ${{ steps.deploy.outputs.data_bucket_name }}
           pa_token: ${{ secrets.GH_PA_TOKEN }}
               
       - name: Update GitHub Secrets Distribution ID
@@ -85,4 +95,11 @@ jobs:
         with:
           name: CLOUDFRONT_ID_${{ github.event.inputs.environment || 'dev' }}
           value: ${{ steps.deploy.outputs.distribution_id }}
+          pa_token: ${{ secrets.GH_PA_TOKEN }}
+
+      - name: Update GitHub Secrets API Endpoint
+        uses: gliech/create-github-secret-action@v1
+        with:
+          name: API_ENDPOINT_${{ github.event.inputs.environment || 'dev' }}
+          value: ${{ steps.deploy.outputs.api_endpoint }}
           pa_token: ${{ secrets.GH_PA_TOKEN }}

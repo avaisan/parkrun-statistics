@@ -90,6 +90,17 @@ Resources:
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/cdk-bootstrap/*
                   - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/cdk/*
 
+              # Lambda and API Gateway permissions
+              - Effect: Allow
+                Action:
+                  - lambda:*
+                  - apigateway:*
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - lambda:UpdateFunctionCode
+                Resource: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:parkrun-api-*
+
 Outputs:
   RoleArn:
     Description: ARN of the GitHub Actions Role

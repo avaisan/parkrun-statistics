@@ -1,7 +1,7 @@
 # Custom
 data-export/
-data/latest_date.json
 data/parkrun-data.json
+data/latest_date.json
 
 # Dependencies
 node_modules/
