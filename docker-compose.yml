@@ -29,7 +29,7 @@ services:
       - PORT=3001
       - FRONTEND_URL=http://localhost:5173
       - NODE_ENV=development
-
+      - DEBUG=true
   frontend:
     build:
       context: ./frontend
@@ -41,6 +41,7 @@ services:
       - "5173:5173"
     environment:
       - VITE_API_URL=http://localhost:3001
+      - VITE_DEBUG=true
     depends_on:
       - api
 

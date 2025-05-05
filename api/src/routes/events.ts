@@ -6,7 +6,7 @@ const router = Router();
 router.get('/', async (_req: Request, res: Response) => {
     try {
         const stats = await readEventStats();
-        res.json(stats);
+        res.json({event_quarterly_stats: stats});
     } catch (error) {
         console.error('Error fetching stats:', error);
         res.status(500).json({ error: 'Failed to fetch statistics' });
