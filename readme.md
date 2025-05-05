@@ -4,7 +4,10 @@ This is a personal hobby project to show ParkRun event statistics for Nordic cou
 
 ![Screenshot of the UI](./public/frontend.jpg)
 
-Tech stack is Node.js/Typescript and React. Data update relies on manual updates for now, as source data has to be fetched from official ParkRun website first. This project includes a scraper that gets the data and inserts it to a PostgreSQL database running in Docker. From there, data can be exported as JSON, which is easy to convert to TS file for the frontend app.
+Tech stack is Node.js/Typescript, React and AWS CDK. Deployments are done with GitHub Actions.
+![Screenshot of the UI](./public/infra.jpg)
+
+Data update relies on manual updates for now, as source data has to be fetched from official ParkRun website first. This project includes a scraper that gets the data and inserts it to a PostgreSQL database running in Docker. From there, data can be exported as JSON, which is then uploaded to S3 bucket.
 
 ## Prerequisites
 - Node.js v22.14.0
@@ -32,7 +35,7 @@ npm run scraper -- --country XX --from 2025-MM-DD
 ```
 This might fail to captcha. I won't instruct here how to get past that.
 
-4. Export data from the database as `json`, see data format instructions from frontend readme file, place the file there in `frontend/src/data/`.
+4. Export data from the database as `json`, save file to `data` folder with name `parkrun-data.json`. See template file to ensure format is correct.
 5. If data fetching worked and you have docker containers running, you can see the UI from `localhost:5173`.
 
 ### Cloud setup
@@ -40,14 +43,11 @@ This might fail to captcha. I won't instruct here how to get past that.
 2. Add these secrets to GitHub repo:
 - AWS_ROLE_ARN (see output from oidc-role.yml)
 - AWS_ACCOUNT_ID
-- FRONTEND_BUCKET
-- CLOUDFRONT_ID
-- HOSTED_ZONE_ID
-As repo variable, add domain name (e.g. yourdomain.com).
+As repo variable, add domain name (e.g. yourdomain.com). You need to have manually set up domain first.
 
-3. Push changes to main branch - observe pipelines triggering. Run `deploy-infra.yml` first so you have infrastructure. Then `deploy-frontend` have something to push into.
+GitHub Actions will update other secrets based on CDK stack outputs.
 
-Once infrastructure is provisioned and frontend pipeline has run, the website is accessible in the CloudFront URL.
+3. Push changes to main branch - observe pipelines triggering. Run `deploy-infra.yml` first so you have infrastructure. Then `deploy-api` and `deploy-frontend` have something to push into.
 
 ### Environments
 Cloud environments are managed via context in `cdk.json`. As template, dev and prod are configured.

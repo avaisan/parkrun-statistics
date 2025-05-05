@@ -1,95 +1,70 @@
-import { APIGatewayProxyEvent, APIGatewayProxyHandler } from 'aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { readEventStats, readLatestDate } from './services/data.js';
+
+const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key'
+};
+
+interface IEventStats {
+    event_quarterly_stats: unknown[];
+}
+
+interface IHealthCheck {
+    status: string;
+    timestamp: string;
+    services: { api: string };
+}
+
+type RouteResponse = IEventStats | string | IHealthCheck;
+type RouteHandler = () => Promise<RouteResponse>;
+
+const routes: Record<string, RouteHandler> = {
+    '/api/events': async () => {
+        const stats = await readEventStats();
+        return { event_quarterly_stats: stats };
+    },
+    '/api/latest-date': async () => {
+        return await readLatestDate();
+    },
+    '/api/health': async () => ({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        services: { api: 'up' }
+    })
+};
+
+const createResponse = (statusCode: number, body: unknown): APIGatewayProxyResult => ({
+    statusCode,
+    headers,
+    body: JSON.stringify(body)
+});
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent) => {
     console.log('Event received:', JSON.stringify(event));
-    
-    const headers = {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key'
-    };
-    
+
     if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 200,
-            headers,
-            body: ''
-        };
+        return createResponse(200, '');
     }
-    
+
     try {
-        const path = event.path;
-        let responseBody;
+        const route = Object.keys(routes).find(path => event.path.includes(path));
         
-        console.log(`Processing request for path: ${path}`);
-        
-        if (path.includes('/api/events')) {
-            try {
-                const stats = await readEventStats();
-                console.log(`Retrieved ${stats ? (Array.isArray(stats) ? stats.length : 'non-array') : 'null'} stats`);
-                responseBody = { event_quarterly_stats: stats };
-            } catch (error) {
-                console.error('Error reading event stats:', error);
-                return {
-                    statusCode: 500,
-                    headers,
-                    body: JSON.stringify({ 
-                        error: 'Failed to retrieve event statistics',
-                        details: error instanceof Error ? error.message : String(error)
-                    })
-                };
-            }
-        } else if (path.includes('/api/latest-date')) {
-            try {
-                const latestDate = await readLatestDate();
-                console.log('Latest date:', latestDate);
-                responseBody = latestDate;
-            } catch (error) {
-                console.error('Error reading latest date:', error);
-                return {
-                    statusCode: 500,
-                    headers,
-                    body: JSON.stringify({ 
-                        error: 'Failed to retrieve latest date',
-                        details: error instanceof Error ? error.message : String(error)
-                    })
-                };
-            }
-        } else if (path.includes('/api/health')) {
-            responseBody = {
-                status: 'healthy',
-                timestamp: new Date().toISOString(),
-                services: {
-                    api: 'up'
-                }
-            };
-        } else {
-            console.log(`Unhandled path: ${path}`);
-            return {
-                statusCode: 404,
-                headers,
-                body: JSON.stringify({ error: 'Not found' })
-            };
+        if (!route) {
+            return createResponse(404, { error: 'Not found' });
         }
-        
-        console.log('Sending response:', JSON.stringify(responseBody).substring(0, 200) + (JSON.stringify(responseBody).length > 200 ? '...' : ''));
-        
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify(responseBody)
-        };
+
+        const result = await routes[route]();
+        console.log('Response:', JSON.stringify(result).substring(0, 200));
+        return createResponse(200, result);
+
     } catch (error) {
-        console.error('Unhandled error in Lambda handler:', error);
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({ 
-                error: 'Internal server error',
-                details: error instanceof Error ? error.message : String(error)
-            })
-        };
+        console.error('Error processing request:', error);
+        return createResponse(500, {
+            error: 'Internal server error',
+            details: error instanceof Error ? error.message : String(error)
+        });
     }
 };
