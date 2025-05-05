@@ -6,6 +6,7 @@
     "frontend",
     "scraper",
     "prisma",
+    "api",
     "cdk"
   ],
   "scripts": {

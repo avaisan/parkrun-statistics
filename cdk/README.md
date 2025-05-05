@@ -1,6 +1,6 @@
 # ParkRun Infrastructure
 
-This project contains the AWS CDK infrastructure code for the ParkRun application.
+This project contains the AWS CDK infrastructure code for the ParkRun Statistics application.
 
 ## Architecture
 
@@ -9,14 +9,16 @@ The infrastructure consists of:
 - Route53 hosted zone management
 - ACM creation and management
 - S3 bucket for frontend code
+- Lambda function and API gateway setup
+- CloudWatch monitoring
 
 
 ### Environments
 Environments are managed via context. If another environment is desireable, just add or modify an account in `cdk.json` and run command e.g. `cdk deploy --all -c environment=prod` to deploy prod.
 
-For different configurations to e.g. DB cluster per env, more configs would need to be added to `cdk.json` and `config.ts`.
+For different configurations to e.g. different AWS account per env, modify `cdk.json`.
 
-For now, GitHub actions are defined to deploy 'prod' environment with default settings. If this is deployed locally and no environment variable is set, it deploys 'dev'. Currently the only difference with these two is that resource names are different.
+GitHub actions are defined to deploy 'dev' environment with default settings. Deploying to 'prod' is done by triggering the workflows manually. If this is deployed locally and no environment variable is set, it deploys 'dev'. Currently the only difference with these two is that resource names are different.
 
 
 ## Prerequisites
@@ -24,6 +26,7 @@ For now, GitHub actions are defined to deploy 'prod' environment with default se
 - Node.js 22.x
 - GitHub account with repository secrets set up
 - AWS account with appropriate permissions (see related OIDC-role.yml)
+- Route53 domain that has been created beforehand.
 
 ## Setup
 
@@ -45,11 +48,12 @@ cdk deploy --all
 cdk destroy --all
 ```
 3. Provision infrastructure using `deploy-infra` workflow.
-4. Connect to database, run schema updates and populate tables.
-5. Deploy backend with `deploy-backend`.
+4. Run scraper locally, export data from database as json and save files to S3 data bucket.
+5. Deploy API with `deploy-api`.
 6. Deploy frontend with `deploy-frontend`.
 
 ### Security, monitoring
 - Frontend is deployed to S3 for ease of deployment and cost savings.
 - S3 is only accessible from CloudFront distribution.
+- API is only accessible from frontend domain.
 - Logs, metrics go to CloudWatch so identifying access and usage patterns is doable.

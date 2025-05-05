@@ -5,6 +5,9 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as apigw from 'aws-cdk-lib/aws-apigateway';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 interface ParkRunStackProps extends cdk.StackProps {
@@ -31,8 +34,14 @@ export class ParkRunStack extends cdk.Stack {
       region: 'us-east-1',
     });;
 
-    const websiteBucket = new s3.Bucket(this, 'XXXXXXXXXXXXX', {
-      bucketName: `${props.subdomain}-${props.environmentName}-${this.account}`,
+    const dataBucket = new s3.Bucket(this, 'ParkRunDataBucket', {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      enforceSSL: true
+    });
+
+    const websiteBucket = new s3.Bucket(this, 'ParkRunBucket', {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       encryption: s3.BucketEncryption.S3_MANAGED,
@@ -80,6 +89,61 @@ export class ParkRunStack extends cdk.Stack {
       )
     });
 
+    const apiFunction = new lambda.Function(this, 'ParkRunApiFunction', {
+      functionName: `parkrun-api-${props.environmentName}`,
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromInline(`
+        export const handler = async (event) => {
+          return {
+            statusCode: 200,
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            },
+            body: JSON.stringify({ message: 'Hello from Lambda!' })
+          };
+        };
+      `),
+      environment: {
+        NODE_ENV: props.environmentName,
+        DATA_BUCKET_NAME: dataBucket.bucketName,
+        NODE_OPTIONS: '--experimental-modules --es-module-specifier-resolution=node'
+      },
+      memorySize: 256,
+      timeout: cdk.Duration.seconds(30),
+    });
+
+    apiFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'logs:CreateLogGroup',
+        'logs:CreateLogStream',
+        'logs:PutLogEvents'
+      ],
+      resources: ['*']
+    }));
+
+    dataBucket.grantRead(apiFunction);
+
+    const api = new apigw.RestApi(this, 'ParkRunApi', {
+      restApiName: `parkrun-api-${props.environmentName}`,
+      description: 'API Gateway for ParkRun Statistics',
+      defaultCorsPreflightOptions: {
+        allowOrigins: [`https://${props.subdomain}.${props.domainName}`],
+        allowMethods: ['GET'],
+        allowHeaders: ['Content-Type', 'X-Amz-Date', 'Authorization', 'X-Api-Key']
+      },
+    });
+
+    const apiResource = api.root.addResource('api');
+
+    const eventsIntegration = new apigw.LambdaIntegration(apiFunction);
+    apiResource.addResource('events').addMethod('GET', eventsIntegration);
+    apiResource.addResource('latest-date').addMethod('GET', eventsIntegration);
+    apiResource.addResource('health').addMethod('GET', eventsIntegration);
+
+    // Outputs
     new cdk.CfnOutput(this, 'DistributionDomain', {
       value: distribution.distributionDomainName,
     });
@@ -90,6 +154,12 @@ export class ParkRunStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'BucketName', {
       value: websiteBucket.bucketName,
+      description: 'S3 bucket for frontend files',
+    });
+
+    new cdk.CfnOutput(this, 'DataBucketName', {
+      value: dataBucket.bucketName,
+      description: 'S3 bucket for data files',
     });
 
     new cdk.CfnOutput(this, 'CertificateArn', {
@@ -98,6 +168,18 @@ export class ParkRunStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'DomainName', {
       value: fullDomain,
+    });
+
+    new cdk.CfnOutput(this, 'ApiEndpoint', {
+      value: api.url,
+      description: 'API Gateway endpoint URL',
+      exportName: `ParkRunApiEndpoint-${props.environmentName}`
+    });
+
+    new cdk.CfnOutput(this, 'LambdaName', {
+      value: apiFunction.functionName,
+      description: 'Lambda function name',
+      exportName: `ParkRunLambdaName-${props.environmentName}`
     });
   }
 }

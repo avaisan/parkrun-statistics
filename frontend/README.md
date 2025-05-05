@@ -1,6 +1,6 @@
 # ParkRun Nordic Statistics Frontend
 
-A React-based frontend application for displaying parkrun statistics from Nordic countries.
+A React-based frontend application for displaying ParkRun statistics from Nordic countries.
 
 ## Features
 
@@ -56,25 +56,28 @@ The application will be available at `http://localhost:5173`
 frontend/
 ├── public/              # Static files
 │   └── parkrun_logo.png
+│   └── 404.html
+│   └── 500.html
 ├── src/
 │   ├── components/     # React components
 │   │   └── StatsTable.tsx
 │   │   └── LastUpdated.tsx
 │   │   └── ErrorBoundary.tsx
 │   ├── services/
-│   │   └── time_format.ts # The only "calculation" done in UI.
+│   │   └── aoi.ts # Use API to fetch data
+│   │   └── time_format.ts  # The only "calculation" done in UI.
 │   ├── data/
 │   │   └── parkrun-data.ts # Source data
-│   ├── App.tsx        # Main application component
-│   ├── main.tsx       # Application entry point
-│   └── theme.ts       # Material-UI theme configuration
+│   ├── App.tsx             # Main application component
+│   ├── main.tsx            # Application entry point
+│   └── theme.ts            # Material-UI theme configuration
 ```
 
 
 
 ## Technology Stack
 
-- React 19
+- React
 - TypeScript
 - Vite
-- Material-UI v7
+- Material-UI
