@@ -8,9 +8,6 @@ import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import { Construct } from 'constructs';
 
 interface ParkRunStackProps extends cdk.StackProps {
@@ -92,42 +89,30 @@ export class ParkRunStack extends cdk.Stack {
       )
     });
 
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-
     const apiFunction = new lambda.Function(this, 'ParkRunApiFunction', {
       functionName: `parkrun-api-${props.environmentName}`,
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: 'index.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../api'), {
-        bundling: {
-          image: lambda.Runtime.NODEJS_22_X.bundlingImage,
-          command: [
-            'bash', '-c', [
-              'mkdir -p /tmp/build',
-              'cp -r /asset-input/* /tmp/build',
-              'cd /tmp/build',
-              'npm install --no-fund --no-audit',
-              'npm run build',
-              'echo \'{"type":"module"}\' > /asset-output/package.json',
-              'cp -r dist/* /asset-output/'
-            ].join(' && ')
-          ],
-          user: 'root'
-        }
-      }),
+      code: lambda.Code.fromInline(`
+        export const handler = async (event) => {
+          return {
+            statusCode: 200,
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+            },
+            body: JSON.stringify({ message: 'Hello from Lambda!' })
+          };
+        };
+      `),
       environment: {
         NODE_ENV: props.environmentName,
         DATA_BUCKET_NAME: dataBucket.bucketName,
-        STATS_FILE_PATH: 'parkrun-data.json',
-        DATE_FILE_PATH: 'latest_date.json',
-        NODE_OPTIONS: '--experimental-specifier-resolution=node'
+        NODE_OPTIONS: '--experimental-modules --es-module-specifier-resolution=node'
       },
       memorySize: 256,
       timeout: cdk.Duration.seconds(30),
     });
-    
-    
 
     apiFunction.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,

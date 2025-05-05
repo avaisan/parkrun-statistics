@@ -49,25 +49,28 @@ jobs:
           aws-region: eu-central-1
           
       - name: Install Dependencies
-        run: |
-          npm ci
+        working-directory: api
+        run: npm ci
           
       - name: Build API
+        working-directory: api
         env:
           TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
-        run: |
-          cd api
-          npm run build
+        run: npm run build
           
       - name: Package Lambda
+        working-directory: api
         run: |
-          cd api
-          zip -r ../function.zip dist/* data/*
+          mkdir -p dist/node_modules
+          cp -r node_modules/* dist/node_modules/
+          cp package.json dist/
+          echo '{ "type": "module" }' > dist/package.json
+          cd dist && zip -r ../../function.zip .
           
       - name: Update Lambda Function
         env:
           TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
         run: |
           aws lambda update-function-code \
-            --function-name parkrun-api-$TARGET_ENV \
+            --function-name "parkrun-api-${TARGET_ENV}" \
             --zip-file fileb://function.zip
