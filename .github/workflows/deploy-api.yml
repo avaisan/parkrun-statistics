@@ -1,0 +1,76 @@
+name: Deploy API
+
+on:
+  workflow_run:
+    workflows: ["Deploy Infrastructure"]
+    types:
+      - completed
+    branches: [main]
+  push:
+    branches: [ main ]
+    paths:
+      - 'api/**'
+      - '.github/workflows/deploy-api.yml'
+      - '!**.md'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy (dev/prod)'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '23'
+          cache: 'npm'
+          
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-central-1
+          
+      - name: Install Dependencies
+        working-directory: api
+        run: npm ci
+          
+      - name: Build API
+        working-directory: api
+        env:
+          TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
+        run: npm run build
+          
+      - name: Package Lambda
+        working-directory: api
+        run: |
+          mkdir -p dist/node_modules
+          cp -r node_modules/* dist/node_modules/
+          cp package.json dist/
+          echo '{ "type": "module" }' > dist/package.json
+          cd dist && zip -r ../../function.zip .
+          
+      - name: Update Lambda Function
+        env:
+          TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
+        run: |
+          aws lambda update-function-code \
+            --function-name "parkrun-api-${TARGET_ENV}" \
+            --zip-file fileb://function.zip
