@@ -52,6 +52,10 @@ jobs:
         working-directory: api
         run: npm ci
           
+      - name: Run Tests
+        working-directory: api
+        run: npm test
+          
       - name: Build API
         working-directory: api
         env:
