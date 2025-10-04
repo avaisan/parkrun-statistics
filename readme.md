@@ -80,7 +80,8 @@ VITE_API_URL=http://localhost:3001
 
 ### Deployments
 - CDK is used only to provision infrastructure. It does not deploy application code.
-- Frontend pipeline triggers when changes are done to `frontend` folder on main branch.
-- API pipeline triggers when changes are done to `api` folder on main branch.
+- Frontend pipeline triggers when changes are done to `frontend` folder on main branch. This gets pushed to dev environment.
+- API pipeline triggers when changes are done to `api` folder on main branch. This gets pushed to dev environment.
 - CDK pipeline uses GitHub action that writes S3 bucket and Cloudfront ID into GitHub repo secrets, which frontend deployment uses to deploy code.
-
+- Each pull request is run through linter and unit tests (if they exist). When merging PR to main branch, linter and tests run also.
+- Pushing changes to prod needs to be done via manual action in GitHub Actions - Run each pipeline via run workflow -> main branch -> Environment to deploy -> prod. 
