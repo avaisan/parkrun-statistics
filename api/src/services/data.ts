@@ -13,8 +13,6 @@ async function readFromS3(key: string) {
         throw new Error('DATA_BUCKET_NAME environment variable not set');
     }
 
-    console.log(`Reading from S3 bucket: ${bucketName}, key: ${key}`);
-
     const command = new GetObjectCommand({
         Bucket: bucketName,
         Key: key
