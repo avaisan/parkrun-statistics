@@ -10,7 +10,7 @@ import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
-interface ParkRunStackProps extends cdk.StackProps {
+interface IParkRunStackProps extends cdk.StackProps {
   domainName: string;
   hostedZoneId: string;
   environmentName: string;
@@ -18,7 +18,7 @@ interface ParkRunStackProps extends cdk.StackProps {
 }
 
 export class ParkRunStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: ParkRunStackProps) {
+  constructor(scope: Construct, id: string, props: IParkRunStackProps) {
     super(scope, id, props);
 
     const fullDomain = `${props.subdomain}.${props.domainName}`;
