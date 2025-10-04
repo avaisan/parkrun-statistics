@@ -18,7 +18,13 @@
     "scraper": "npm run scraper -w scraper",
     "frontend": "npm run ui -w frontend",
     "lint": "npm run lint --workspaces",
-    "clean": "npm run clean --workspaces"
+    "clean": "npm run clean --workspaces",
+    "test": "npm run test --workspaces --if-present",
+    "test:api": "npm run test -w api",
+    "test:frontend": "npm run test -w frontend",
+    "start": "docker compose up",
+    "start:db": "docker compose up -d postgres",
+    "stop": "docker compose down"
   },
   "devDependencies": {
     "tsx": "^4.20.6",
