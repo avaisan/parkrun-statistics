@@ -3,6 +3,7 @@ name: Pull Request Checks
 on:
   pull_request:
     branches: [ main ]
+    types: [opened, reopened]
     paths:
       - 'api/**'
       - 'frontend/**'
@@ -13,102 +14,108 @@ on:
       - '!**.md'
 
 jobs:
-  api-checks:
+  check-changes:
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.changed_files, 'api/')
-    
+    permissions:
+      pull-requests: read
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      prisma: ${{ steps.filter.outputs.prisma }}
+      scraper: ${{ steps.filter.outputs.scraper }}
+      cdk: ${{ steps.filter.outputs.cdk }}
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: dorny/paths-filter@v2
+        id: filter
         with:
-          node-version: '23'
-          cache: 'npm'
-          
-      - name: Install dependencies
-        working-directory: api
-        run: npm ci
-          
-      - name: Run linter
-        working-directory: api
-        run: npm run lint
-          
-      - name: Run API tests
-        working-directory: api
-        run: npm test
+          filters: |
+            api:
+              - 'api/**'
+            frontend:
+              - 'frontend/**'
+            prisma:
+              - 'prisma/**'
+            scraper:
+              - 'scraper/**'
+            cdk:
+              - 'cdk/**'
 
-  frontend-checks:
+  prisma:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.prisma == 'true' }}
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.changed_files, 'frontend/')
-    
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '23'
           cache: 'npm'
-          
-      - name: Install dependencies
-        working-directory: frontend
-        run: npm ci
-          
-      - name: Run linter
-        working-directory: frontend
-        run: npm run lint
-          
-      - name: Run frontend tests
-        working-directory: frontend
-        run: npm test
+      - run: npm ci
+        working-directory: prisma
+      - run: npm run lint
+        working-directory: prisma
 
-  cdk-checks:
+  api:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.api == 'true' }}
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.changed_files, 'cdk/')
-    
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '23'
           cache: 'npm'
-          
-      - name: Install dependencies
-        working-directory: cdk
-        run: npm ci
-          
-      - name: Run linter
-        working-directory: cdk
-        run: npm run lint
-          
-      - name: Run CDK tests
-        working-directory: cdk
-        run: npm test
+      - run: npm ci
+        working-directory: api
+      - run: npm run lint
+        working-directory: api
+      - run: npm test
+        working-directory: api
 
-  scraper-checks:
+  frontend:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.changed_files, 'scraper/')
-    
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '23'
           cache: 'npm'
-          
-      - name: Install dependencies
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run lint
+        working-directory: frontend
+      - run: npm test
+        working-directory: frontend
+
+  scraper:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.scraper == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '23'
+          cache: 'npm'
+      - run: npm ci
         working-directory: scraper
-        run: npm ci
-          
-      - name: Run linter
+      - run: npm run lint
         working-directory: scraper
-        run: npm run lint
-          
-      - name: Run scraper tests
-        working-directory: scraper
-        run: npm test
+
+  cdk:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.cdk == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '23'
+          cache: 'npm'
+      - run: npm ci
+        working-directory: cdk
+      - run: npm run lint
+        working-directory: cdk
