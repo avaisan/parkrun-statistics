@@ -1,22 +1,23 @@
 import js from '@eslint/js'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default tseslint.config(
   {
     ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/cdk.out/**']
   },
   {
-    // Base config for all TypeScript files
     extends: [
       js.configs.recommended,
       ...tseslint.configs.recommended
     ],
+    files: ['**/*.ts'],
     languageOptions: {
       ecmaVersion: 2022,
-      sourceType: 'module'
+      sourceType: 'module',
+      globals: {
+        ...globals.node
+      }
     },
     rules: {
       'no-unused-vars': 'error',
@@ -25,37 +26,10 @@ export default tseslint.config(
     }
   },
   {
-    // Frontend specific config
-    files: ['frontend/**/*.{ts,tsx}'],
-    languageOptions: {
-      globals: {
-        ...globals.browser
-      },
-      parserOptions: {
-        ecmaFeatures: {
-          jsx: true
-        }
-      }
-    },
-    plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh
-    },
-    rules: {
-      ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }]
-    }
-  },
-  {
     // Scraper specific config
     files: ['scraper/**/*.ts'],
-    languageOptions: {
-      globals: {
-        ...globals.node
-      }
-    },
     rules: {
-      'no-console': 'off' // Allow console logs in backend
+      'no-console': 'off' // Allow console logs in API and scraper
     }
   },
   {
