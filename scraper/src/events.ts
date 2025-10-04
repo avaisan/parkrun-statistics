@@ -17,7 +17,8 @@ export const PARKRUN_EVENTS_PER_COUNTRY: Record<string, ICountry> = {
             "pokkinen",
             "lahdensatama",
             "vaaksynkanava",
-            "tampere"
+            "tampere",
+            "urheilupuisto",
         ]
     },
     SE: {
@@ -52,7 +53,8 @@ export const PARKRUN_EVENTS_PER_COUNTRY: Record<string, ICountry> = {
             "nansenparken",
             "bergerstadion",
             "ekebergsletta",
-            "toyen"
+            "toyen",
+            "greveskogen"
         ]
     },
     DK: {

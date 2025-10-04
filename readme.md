@@ -19,28 +19,31 @@ Data update relies on manual updates for now, as source data has to be fetched f
 - Route 53 domain
 
 ### Local setup
-0. Run `npm install &&  npm run build` from project root.
-1. Run `docker compose up -d` to spin up database and frontend.
-2. Initialise database with Prisma migrations:
-```bash
-cd backend
-npm install
-npm run build
-npm run db:migrate
-```
-Now database should have the necessary schema.
+0. Run `npm install && npm run build` from project root.
+1. Run `npm run db` to spin up the database.
+2. Initialize database with Prisma migrations:
+   ```bash
+   npm run db:migrate
+   ```
+3. To populate database, run the scraper:
+   ```bash
+   # Fetch all events from all countries from last 7 days:
+   npm run scraper
 
-3. To populate database, run scraper from `backend` folder:
-```bash
-# Fetch all events from all countries from last 7 days:
-npm run scraper
-# Fetch a single country from specific date onwards:
-npm run scraper -- --country XX --from 2025-MM-DD
-```
-This might fail to captcha. I won't instruct here how to get past that.
+   # Fetch a single country from a specific date:
+   npm run scraper -- --country XX --from YYYY-MM-DD
+   ```
+   This might fail to captcha. I won't instruct here how to get past that.
 
-4. Export data from the database as `json`, save file to `data` folder with name `parkrun-data.json`. Create another file for `latest_date.json` that contains the latest event date you have in data. See template files to ensure format is correct.
-5. If data fetching worked and you have docker containers running, you can see the UI from `localhost:5173`.
+4. Export data from the database as JSON and save two files to the `data` folder:
+   - `parkrun-data.json`: Event statistics 
+   - `latest_date.json`: Latest event date
+
+5. Start the frontend development server:
+   ```bash
+   npm run frontend
+   ```
+   The UI will be available at `localhost:5173`
 
 ### Cloud setup
 1. Run CloudFormation stack `oidc-role.yml` to your AWS account to setup permissions for GitHub Actions.
@@ -59,15 +62,19 @@ Cloud environments are managed via context in `cdk.json`. As template, dev and p
 If you want to do cdk deploy from local computer, you may need to change cdk.json dev environment to contain AWS account ID.
 
 Local setup is handled via docker-compose. For local env:
-1. create `.env` file in backend folder:
+1. Create `.env` file in [`prisma`](prisma) folder:
+```properties
+DATABASE_URL=postgresql://parkrun:parkrun@localhost:5433/parkrun?schema=public
+NODE_ENV=development
 ```
-DATABASE_URL=postgresql://parkrun:parkrun@localhost:5432/parkrun?schema=public
-FRONTEND_URL=http://localhost:5173
+2. Create `.env` file in [`api`](api) folder:
+```properties
 NODE_ENV=development
 PORT=3001
+FRONTEND_URL=http://localhost:5173
 ```
-2. create `.env` file in frontend folder:
-```
+3. Create `.env` file in [`frontend`](frontend) folder:
+```properties
 VITE_API_URL=http://localhost:3001
 ```
 

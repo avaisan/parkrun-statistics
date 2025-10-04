@@ -5,19 +5,18 @@
   "scripts": {
     "build": "tsc",
     "scraper": "prisma generate --schema=../prisma/schema.prisma && tsx src/index.ts",
-
     "lint": "eslint .",
     "clean": "rm -rf dist build function.zip"
   },
   "dependencies": {
     "@parkrun/prisma": "*",
-    "@prisma/client": "^6.6.0",
-    "axios": "^1.8.4",
-    "cheerio": "^1.0.0"
+    "@prisma/client": "^6.8.2",
+    "axios": "^1.12.2",
+    "cheerio": "^1.1.2"
   },
   "devDependencies": {
-    "@types/node": "^22.14.1",
+    "@types/node": "^24.6.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
   }
 }

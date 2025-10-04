@@ -21,7 +21,7 @@
     "clean": "npm run clean --workspaces"
   },
   "devDependencies": {
-    "tsx": "^4.19.3",
-    "prisma": "^6.6.0"
+    "tsx": "^4.20.6",
+    "prisma": "^6.16.3"
   }
 }

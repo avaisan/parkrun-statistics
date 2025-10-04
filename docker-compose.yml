@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: parkrun
       POSTGRES_DB: parkrun
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -30,6 +30,7 @@ services:
       - FRONTEND_URL=http://localhost:5173
       - NODE_ENV=development
       - DEBUG=true
+      - DATABASE_URL=postgresql://parkrun:parkrun@postgres:5432/parkrun
   frontend:
     build:
       context: ./frontend
