@@ -1,0 +1,114 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'api/**'
+      - 'frontend/**'
+      - 'cdk/**'
+      - 'scraper/**'
+      - 'prisma/**'
+      - '.github/workflows/**'
+      - '!**.md'
+
+jobs:
+  api-checks:
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.changed_files, 'api/')
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '23'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        working-directory: api
+        run: npm ci
+          
+      - name: Run linter
+        working-directory: api
+        run: npm run lint
+          
+      - name: Run API tests
+        working-directory: api
+        run: npm test
+
+  frontend-checks:
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.changed_files, 'frontend/')
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '23'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+          
+      - name: Run linter
+        working-directory: frontend
+        run: npm run lint
+          
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test
+
+  cdk-checks:
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.changed_files, 'cdk/')
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '23'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        working-directory: cdk
+        run: npm ci
+          
+      - name: Run linter
+        working-directory: cdk
+        run: npm run lint
+          
+      - name: Run CDK tests
+        working-directory: cdk
+        run: npm test
+
+  scraper-checks:
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.changed_files, 'scraper/')
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '23'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        working-directory: scraper
+        run: npm ci
+          
+      - name: Run linter
+        working-directory: scraper
+        run: npm run lint
+          
+      - name: Run scraper tests
+        working-directory: scraper
+        run: npm test

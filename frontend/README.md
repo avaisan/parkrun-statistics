@@ -47,7 +47,7 @@ frontend/
 │   │   └── LastUpdated.tsx
 │   │   └── ErrorBoundary.tsx
 │   ├── services/
-│   │   └── aoi.ts # Use API to fetch data
+│   │   └── api.ts # Use API to fetch data
 │   │   └── time_format.ts  # The only "calculation" done in UI.
 │   ├── data/
 │   │   └── parkrun-data.ts # Source data
