@@ -152,7 +152,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                     direction={orderBy === 'fastest_quartile' ? order : 'asc'}
                     onClick={() => handleSort('fastest_quartile')}
                   >
-                    Fast quartile
+                    Fastest quartile
                   </TableSortLabel>
                 </Tooltip>
               </TableCell>
