@@ -37,10 +37,9 @@ export const StatsTable = ({ data }: StatsTableProps) => {
   const [orderBy, setOrderBy] = useState<keyof QuarterlyStats>('eventName');
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
 
-  // Get unique years and quarters from data
   const years = useMemo(() => {
     const uniqueYears = [...new Set(data.map(item => item.year))];
-    return uniqueYears.sort((a, b) => b - a); // Sort descending
+    return uniqueYears.sort((a, b) => b - a);
   }, [data]);
 
   const quarters = useMemo(() => [1, 2, 3, 4], []);
@@ -62,7 +61,11 @@ export const StatsTable = ({ data }: StatsTableProps) => {
 
   return (
     <>
-      <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+      <Stack 
+        direction={{ xs: 'column', sm: 'row' }} 
+        spacing={2} 
+        sx={{ mb: 2 }}
+      >
         <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>Country</InputLabel>
           <Select
@@ -107,11 +110,11 @@ export const StatsTable = ({ data }: StatsTableProps) => {
         </FormControl>
       </Stack>
 
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+        <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <TableSortLabel
                   active={orderBy === 'eventName'}
                   direction={orderBy === 'eventName' ? order : 'asc'}
@@ -120,7 +123,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                   Event Name
                 </TableSortLabel>
               </TableCell>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <TableSortLabel
                   active={orderBy === 'eventCountry'}
                   direction={orderBy === 'eventCountry' ? order : 'asc'}
@@ -129,59 +132,59 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                   Country
                 </TableSortLabel>
               </TableCell>
-              <TableCell>Period</TableCell>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>Period</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <Tooltip title="Fastest singular finish time during this quarter in this event">
                 <TableSortLabel
                   active={orderBy === 'fastest_time'}
                   direction={orderBy === 'fastest_time' ? order : 'asc'}
                   onClick={() => handleSort('fastest_time')}
                 >
-                  Fastest finish time
+                  Fastest
                 </TableSortLabel>
                 </Tooltip>
               </TableCell>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <Tooltip title="25% of runners finished faster than this time">
                   <TableSortLabel
                     active={orderBy === 'fastest_quartile'}
                     direction={orderBy === 'fastest_quartile' ? order : 'asc'}
                     onClick={() => handleSort('fastest_quartile')}
                   >
-                    Fastest quartile
+                    Fast Q
                   </TableSortLabel>
                 </Tooltip>
               </TableCell>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <Tooltip title="Average finish time of all runners">
                 <TableSortLabel
                   active={orderBy === 'avg_finish_time'}
                   direction={orderBy === 'avg_finish_time' ? order : 'asc'}
                   onClick={() => handleSort('avg_finish_time')}
                 >
-                  Average time
+                  Avg
                 </TableSortLabel>
                 </Tooltip>
               </TableCell>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <Tooltip title="75% of runners finished faster than this time">
                   <TableSortLabel
                     active={orderBy === 'slowest_quartile'}
                     direction={orderBy === 'slowest_quartile' ? order : 'asc'}
                     onClick={() => handleSort('slowest_quartile')}
                   >
-                    Slowest quartile
+                    Slow Q
                   </TableSortLabel>
                 </Tooltip>
               </TableCell>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <Tooltip title="During this quarter an average of this many runners participated">
                   <TableSortLabel
                     active={orderBy === 'avg_participants'}
                     direction={orderBy === 'avg_participants' ? order : 'asc'}
                     onClick={() => handleSort('avg_participants')}
                 >
-                    Average count of participants
+                    Participants
                   </TableSortLabel>
                 </Tooltip>
               </TableCell>
@@ -190,7 +193,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
           <TableBody>
             {filteredData.map((row, index) => (
               <TableRow key={index}>
-                <TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>
                   <Link
                     href={getEventUrl(row.eventName, row.eventCountry)}
                     target="_blank"
@@ -206,8 +209,8 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                     {row.eventName}
                   </Link>
                 </TableCell>
-                <TableCell>{row.eventCountry}</TableCell>
-                <TableCell>{`${row.year} Q${row.quarter}`}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.eventCountry}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{`${row.year} Q${row.quarter}`}</TableCell>
                 <TableCell>{formatTime(row.fastest_time)}</TableCell>
                 <TableCell>{formatTime(row.fastest_quartile)}</TableCell>
                 <TableCell>{formatTime(row.avg_finish_time)}</TableCell>
