@@ -22,6 +22,7 @@ const mockStats = [
 describe('Test Events API endpoints', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     describe('GET /api/events', () => {

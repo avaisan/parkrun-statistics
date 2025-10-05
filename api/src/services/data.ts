@@ -27,12 +27,14 @@ export async function readEventStats() {
     try {
         if (process.env.NODE_ENV === 'development') {
             const dataDir = '/app/data';
-            const filePath = join(dataDir, 'parkrun-data.json');
+            const filePath = join(dataDir, 'parkrun_data.json');
             const data = await readFile(filePath, 'utf-8');
-            return JSON.parse(data);
+            const parsed = JSON.parse(data);
+            return parsed.event_quarterly_stats || parsed;
         }
         
-        return await readFromS3(statsFilePath);
+        const data = await readFromS3(statsFilePath);
+        return data.event_quarterly_stats || data;
     } catch (error) {
         console.error('Error reading event stats:', error);
         throw new Error('Failed to read event statistics');

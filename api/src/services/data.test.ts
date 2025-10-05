@@ -34,6 +34,7 @@ describe('API data servicing', () => {
     beforeEach(() => {
         vi.resetModules();
         vi.clearAllMocks();
+        vi.spyOn(console, 'error').mockImplementation(() => {});
         
         process.env.NODE_ENV = 'production';
         process.env.DATA_BUCKET_NAME = 'test-bucket';

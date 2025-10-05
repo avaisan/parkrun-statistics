@@ -36,7 +36,7 @@ Data update relies on manual updates for now, as source data has to be fetched f
    This might fail to captcha. I won't instruct here how to get past that.
 
 4. Export data from the database as JSON and save two files to the `data` folder:
-   - `parkrun-data.json`: Event statistics 
+   - `parkrun_data.json`: Event statistics 
    - `latest_date.json`: Latest event date
 
 5. Start the frontend development server:
