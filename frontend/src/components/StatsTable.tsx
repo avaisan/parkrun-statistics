@@ -62,7 +62,11 @@ export const StatsTable = ({ data }: StatsTableProps) => {
 
   return (
     <>
-      <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+      <Stack 
+        direction={{ xs: 'column', sm: 'row' }} 
+        spacing={2} 
+        sx={{ mb: 2 }}
+      >
         <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>Country</InputLabel>
           <Select
@@ -107,11 +111,11 @@ export const StatsTable = ({ data }: StatsTableProps) => {
         </FormControl>
       </Stack>
 
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+        <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <TableSortLabel
                   active={orderBy === 'eventName'}
                   direction={orderBy === 'eventName' ? order : 'asc'}
@@ -120,7 +124,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                   Event Name
                 </TableSortLabel>
               </TableCell>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <TableSortLabel
                   active={orderBy === 'eventCountry'}
                   direction={orderBy === 'eventCountry' ? order : 'asc'}
@@ -129,8 +133,8 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                   Country
                 </TableSortLabel>
               </TableCell>
-              <TableCell>Period</TableCell>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>Period</TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <Tooltip title="Fastest singular finish time during this quarter in this event">
                 <TableSortLabel
                   active={orderBy === 'fastest_time'}
@@ -141,7 +145,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                 </TableSortLabel>
                 </Tooltip>
               </TableCell>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <Tooltip title="25% of runners finished faster than this time">
                   <TableSortLabel
                     active={orderBy === 'fastest_quartile'}
@@ -152,7 +156,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                   </TableSortLabel>
                 </Tooltip>
               </TableCell>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <Tooltip title="Average finish time of all runners">
                 <TableSortLabel
                   active={orderBy === 'avg_finish_time'}
@@ -163,7 +167,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                 </TableSortLabel>
                 </Tooltip>
               </TableCell>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <Tooltip title="75% of runners finished faster than this time">
                   <TableSortLabel
                     active={orderBy === 'slowest_quartile'}
@@ -174,7 +178,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                   </TableSortLabel>
                 </Tooltip>
               </TableCell>
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap' }}>
                 <Tooltip title="During this quarter an average of this many runners participated">
                   <TableSortLabel
                     active={orderBy === 'avg_participants'}
@@ -190,7 +194,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
           <TableBody>
             {filteredData.map((row, index) => (
               <TableRow key={index}>
-                <TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>
                   <Link
                     href={getEventUrl(row.eventName, row.eventCountry)}
                     target="_blank"
@@ -206,8 +210,8 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                     {row.eventName}
                   </Link>
                 </TableCell>
-                <TableCell>{row.eventCountry}</TableCell>
-                <TableCell>{`${row.year} Q${row.quarter}`}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.eventCountry}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{`${row.year} Q${row.quarter}`}</TableCell>
                 <TableCell>{formatTime(row.fastest_time)}</TableCell>
                 <TableCell>{formatTime(row.fastest_quartile)}</TableCell>
                 <TableCell>{formatTime(row.avg_finish_time)}</TableCell>
