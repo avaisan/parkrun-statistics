@@ -37,9 +37,10 @@ export const StatsTable = ({ data }: StatsTableProps) => {
   const [orderBy, setOrderBy] = useState<keyof QuarterlyStats>('eventName');
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
 
+  // Get unique years and quarters from data
   const years = useMemo(() => {
     const uniqueYears = [...new Set(data.map(item => item.year))];
-    return uniqueYears.sort((a, b) => b - a);
+    return uniqueYears.sort((a, b) => b - a); // Sort descending
   }, [data]);
 
   const quarters = useMemo(() => [1, 2, 3, 4], []);
@@ -140,7 +141,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                   direction={orderBy === 'fastest_time' ? order : 'asc'}
                   onClick={() => handleSort('fastest_time')}
                 >
-                  Fastest
+                  Fastest finish time
                 </TableSortLabel>
                 </Tooltip>
               </TableCell>
@@ -151,7 +152,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                     direction={orderBy === 'fastest_quartile' ? order : 'asc'}
                     onClick={() => handleSort('fastest_quartile')}
                   >
-                    Fast Q
+                    Fast quartile
                   </TableSortLabel>
                 </Tooltip>
               </TableCell>
@@ -162,7 +163,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                   direction={orderBy === 'avg_finish_time' ? order : 'asc'}
                   onClick={() => handleSort('avg_finish_time')}
                 >
-                  Avg
+                  Average time
                 </TableSortLabel>
                 </Tooltip>
               </TableCell>
@@ -173,7 +174,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                     direction={orderBy === 'slowest_quartile' ? order : 'asc'}
                     onClick={() => handleSort('slowest_quartile')}
                   >
-                    Slow Q
+                    Slowest quartile
                   </TableSortLabel>
                 </Tooltip>
               </TableCell>
@@ -184,7 +185,7 @@ export const StatsTable = ({ data }: StatsTableProps) => {
                     direction={orderBy === 'avg_participants' ? order : 'asc'}
                     onClick={() => handleSort('avg_participants')}
                 >
-                    Participants
+                    Average count of participants
                   </TableSortLabel>
                 </Tooltip>
               </TableCell>
