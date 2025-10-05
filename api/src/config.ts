@@ -1,5 +1,5 @@
 export const FILES = {
-    STATS: 'parkrun-data.json',
+    STATS: 'parkrun_data.json',
     LATEST_DATE: 'latest_date.json'
   };
   

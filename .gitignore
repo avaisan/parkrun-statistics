@@ -1,6 +1,6 @@
 # Custom
 data-export/
-data/parkrun-data.json
+data/parkrun_data.json
 data/latest_date.json
 
 # Dependencies
