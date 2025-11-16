@@ -114,11 +114,12 @@ function App() {
                     <Typography>
                         Use the filters above the table to view specific countries, years, or quarters. 
                         Click on column headers to sort the data.
+                        If you have any improvement suggestions to this site, please contact me on <a href="https://www.linkedin.com/in/avaisan" target="_blank" rel="noopener">LinkedIn</a> or via <a href="mailto:avaisan@proton.me">email</a>!
                     </Typography>
                     <Typography>
-                        Data is collected from official parkrun results pages. Visit{' '}
+                        Data is collected from official ParkRun results pages. Visit{' '}
                         <Link href="https://www.parkrun.com" target="_blank" rel="noopener">
-                            parkrun website
+                            ParkRun website
                         </Link>{' '}
                         to learn more about these events.
                     </Typography>
