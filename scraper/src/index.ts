@@ -5,6 +5,7 @@ import { saveEventResult } from './save_to_db.js';
 
 interface IScraperOptions {
   countryCode?: CountryCode;
+  eventName?: string;
   fromDate?: string;
 }
 
@@ -58,24 +59,29 @@ async function main(options: IScraperOptions) {
       ? [options.countryCode]
       : Object.keys(PARKRUN_EVENTS_PER_COUNTRY) as CountryCode[];
 
-      for (const countryCode of countriesToProcess) {
-        console.log(`Processing country: ${countryCode}`);
-        const config = PARKRUN_EVENTS_PER_COUNTRY[countryCode];
-  
-        for (const eventName of config.events) {
-          console.log(`\nProcessing ${eventName}`);
-          await processEvent(countryCode, eventName, fromDate);
-        }
+    for (const countryCode of countriesToProcess) {
+      console.log(`Processing country: ${countryCode}`);
+      const config = PARKRUN_EVENTS_PER_COUNTRY[countryCode];
+
+      const eventsToProcess = options.eventName 
+        ? [options.eventName]
+        : config.events;
+
+      for (const eventName of eventsToProcess) {
+        console.log(`\nProcessing ${eventName}`);
+        await processEvent(countryCode, eventName, fromDate);
       }
-  
-      console.log('Scraping completed successfully');
-    } catch (error) {
-      console.error('Error:', error);
-      process.exit(1);
-    } finally {
-      await prisma.$disconnect();
     }
+
+    console.log('Scraping completed successfully');
+  } catch (error) {
+    console.error('Error:', error);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
   }
+}
+
 
 // CLI arguments for country code and date
 const args = process.argv.slice(2);
@@ -86,10 +92,14 @@ for (let i = 0; i < args.length; i += 2) {
     case '--country':
       options.countryCode = args[i + 1] as CountryCode;
       break;
+    case '--event':
+      options.eventName = args[i + 1];
+      break;
     case '--from':
       options.fromDate = args[i + 1];
       break;
   }
 }
+
 
 main(options);

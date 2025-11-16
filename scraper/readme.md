@@ -62,8 +62,8 @@ If event already exists in database, scraper tries to save but fails and moves o
 npm run scraper
 
 #With custom parameters:
-# Format: npm run scraper -- --country <countryCode> --from <fromDate>
-npm run scraper -- --country FI --from 2025-04-12
+# Format: npm run scraper -- --country <countryCode> --event <eventname> --from <fromDate>
+npm run scraper -- --country FI --event mattilanniemi --from 2025-01-01
 ```
 
 ### Available Country Codes
