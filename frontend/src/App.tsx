@@ -99,7 +99,7 @@ function App() {
 
                 <Stack spacing={2} sx={{ mb: 4 }}>
                     <Typography>
-                        This dashboard shows quarterly statistics from parkrun events across Nordic countries. 
+                        This dashboard shows quarterly statistics from ParkRun events across Nordic countries. 
                         All times are shown in minutes.
                     </Typography>
                     <Typography>
