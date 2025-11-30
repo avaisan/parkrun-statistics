@@ -37,7 +37,9 @@ export const PARKRUN_EVENTS_PER_COUNTRY: Record<string, ICountry> = {
             "haga",
             "lillsjon",
             "uppsala",
-            "broparken"
+            "broparken",
+            "djakneberget",
+            "bulltofta"
         ]
     },
     NO: {

@@ -15,7 +15,7 @@
     "db:migrate": "npx prisma migrate deploy",
     "db:reset": "docker-compose down -v && docker-compose up -d postgres && npx prisma migrate reset --force",
     "db:studio": "npx prisma studio",
-    "scraper": "npm run scraper -w scraper",
+    "scraper": "npm -w scraper run scraper --",
     "frontend": "npm run ui -w frontend",
     "lint": "npm run lint --workspaces",
     "clean": "npm run clean --workspaces",
