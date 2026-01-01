@@ -49,22 +49,18 @@ jobs:
           aws-region: eu-central-1
           
       - name: Install Dependencies
-        working-directory: api
         run: npm ci
           
       - name: Run linter
-        working-directory: api
-        run: npm run lint
+        run: npm run lint -w api
           
       - name: Run Tests
-        working-directory: api
-        run: npm test
+        run: npm test -w api
           
       - name: Build API
-        working-directory: api
         env:
           TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
-        run: npm run build
+        run: npm run build -w api
           
       - name: Package Lambda
         working-directory: api
