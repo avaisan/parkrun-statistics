@@ -64,13 +64,9 @@ jobs:
           
       - name: Package Lambda
         run: |
-          cd api
-          npm ci --omit=dev
-          mkdir -p dist/node_modules
-          cp -r node_modules/* dist/node_modules/
-          cp package.json dist/
-          echo '{ "type": "module" }' > dist/package.json
-          cd dist && zip -r ../../function.zip .
+          cd api/dist
+          npm install --production --no-package-lock
+          zip -r ../../function.zip .
           
       - name: Update Lambda Function
         env:
