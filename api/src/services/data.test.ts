@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
+const mockS3Send = vi.fn();
+
 vi.mock('@aws-sdk/client-s3', () => ({
-    S3Client: vi.fn(() => ({
-        send: vi.fn()
-    })),
+    S3Client: class {
+        send = mockS3Send;
+    },
     GetObjectCommand: vi.fn()
 }));
 
@@ -29,32 +31,16 @@ const mockLatestDate = {
 };
 
 describe('API data servicing', () => {
-    let mockS3Send: ReturnType<typeof vi.fn>;
-
     beforeEach(() => {
-        vi.resetModules();
         vi.clearAllMocks();
         vi.spyOn(console, 'error').mockImplementation(() => {});
         
         process.env.NODE_ENV = 'production';
         process.env.DATA_BUCKET_NAME = 'test-bucket';
-
-        mockS3Send = vi.fn();
-        vi.mocked(S3Client).mockImplementation(() => ({
-            send: mockS3Send,
-            config: {},
-            destroy: vi.fn(),
-            middlewareStack: {}
-        } as unknown as S3Client));
     });
 
-    async function getTestedModules() {
-        const { readEventStats, readLatestDate } = await import('./data');
-        return { readEventStats, readLatestDate };
-    }
-
     it('should return properly formatted event stats from S3', async () => {
-            const { readEventStats } = await getTestedModules();
+            const { readEventStats } = await import('./data');
             
             mockS3Send.mockResolvedValueOnce({
                 Body: {
@@ -73,7 +59,7 @@ describe('API data servicing', () => {
     });
 
     it('should validate event stats structure', async () => {
-            const { readEventStats } = await getTestedModules();
+            const { readEventStats } = await import('./data');
             
             mockS3Send.mockResolvedValueOnce({
                 Body: {
@@ -95,14 +81,14 @@ describe('API data servicing', () => {
     });
 
     it('should handle S3 errors gracefully', async () => {
-            const { readEventStats } = await getTestedModules();
+            const { readEventStats } = await import('./data');
             
             mockS3Send.mockRejectedValueOnce(new Error('S3 Error'));
             await expect(readEventStats()).rejects.toThrow('Failed to read event statistics');
     });
 
     it('should return properly formatted latest date from S3', async () => {
-            const { readLatestDate } = await getTestedModules();
+            const { readLatestDate } = await import('./data');
             
             mockS3Send.mockResolvedValueOnce({
                 Body: {
@@ -121,7 +107,7 @@ describe('API data servicing', () => {
     });
 
     it('should validate latest date structure', async () => {
-            const { readLatestDate } = await getTestedModules();
+            const { readLatestDate } = await import('./data');
             
             mockS3Send.mockResolvedValueOnce({
                 Body: {
@@ -135,7 +121,7 @@ describe('API data servicing', () => {
     });
 
     it('should handle S3 errors gracefully', async () => {
-            const { readLatestDate } = await getTestedModules();
+            const { readLatestDate } = await import('./data');
             
             mockS3Send.mockRejectedValueOnce(new Error('S3 Error'));
             await expect(readLatestDate()).rejects.toThrow('Failed to read latest date');

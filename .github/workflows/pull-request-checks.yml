@@ -49,12 +49,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '23'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
-        working-directory: prisma
-      - run: npm run lint
-        working-directory: prisma
+      - run: npm run lint -w prisma
 
   api:
     needs: check-changes
@@ -64,14 +62,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '23'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
-        working-directory: api
-      - run: npm run lint
-        working-directory: api
-      - run: npm test
-        working-directory: api
+      - run: npm run lint -w api
+      - run: npm test -w api
 
   frontend:
     needs: check-changes
@@ -81,14 +76,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '23'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
-        working-directory: frontend
-      - run: npm run lint
-        working-directory: frontend
-      - run: npm test
-        working-directory: frontend
+      - run: npm run lint -w frontend
+      - run: npm test -w frontend
 
   scraper:
     needs: check-changes
@@ -98,12 +90,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '23'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
-        working-directory: scraper
-      - run: npm run lint
-        working-directory: scraper
+      - run: npm run lint -w scraper
 
   cdk:
     needs: check-changes
@@ -113,9 +103,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '23'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
-        working-directory: cdk
-      - run: npm run lint
-        working-directory: cdk
+      - run: npm run lint -w cdk

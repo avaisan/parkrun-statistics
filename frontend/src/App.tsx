@@ -34,7 +34,7 @@ function App() {
 
     if (loading) {
         return (
-            <Container maxWidth="lg">
+            <Container maxWidth={false} sx={{ maxWidth: '100%', px: 2 }}>
                 <Box display="flex" justifyContent="center" mt={4}>
                     <Typography>Loading...</Typography>
                 </Box>
@@ -44,7 +44,7 @@ function App() {
 
     if (error) {
         return (
-            <Container maxWidth="lg">
+            <Container maxWidth={false} sx={{ maxWidth: '100%', px: 2 }}>
                 <Box display="flex" justifyContent="center" mt={4}>
                     <Typography color="error">{error}</Typography>
                 </Box>
@@ -53,7 +53,7 @@ function App() {
     }
 
     return (
-        <Container maxWidth="lg">
+        <Container maxWidth={false} sx={{ maxWidth: '100%', px: 2 }}>
             <Paper 
                 elevation={1} 
                 sx={{ 
