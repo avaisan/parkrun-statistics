@@ -63,13 +63,12 @@ jobs:
         run: npm run build -w api
           
       - name: Package Lambda
-        working-directory: api
         run: |
-          mkdir -p dist/node_modules
-          cp -r node_modules/* dist/node_modules/
-          cp package.json dist/
-          echo '{ "type": "module" }' > dist/package.json
-          cd dist && zip -r ../../function.zip .
+          mkdir -p api/dist/node_modules
+          cp -r node_modules/* api/dist/node_modules/
+          cp api/package.json api/dist/
+          echo '{ "type": "module" }' > api/dist/package.json
+          cd api/dist && zip -r ../../function.zip .
           
       - name: Update Lambda Function
         env:
