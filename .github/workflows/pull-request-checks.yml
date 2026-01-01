@@ -49,7 +49,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '23'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
       - run: npm run lint -w prisma
@@ -62,7 +62,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '23'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
       - run: npm run lint -w api
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '23'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
       - run: npm run lint -w frontend
@@ -90,7 +90,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '23'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
       - run: npm run lint -w scraper
@@ -103,7 +103,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '23'
+          node-version: '24'
           cache: 'npm'
       - run: npm ci
       - run: npm run lint -w cdk
