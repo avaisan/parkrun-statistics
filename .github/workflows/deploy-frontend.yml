@@ -49,25 +49,19 @@ jobs:
           aws-region: eu-central-1
           
       - name: Install Dependencies
-        run: |
-          cd frontend
-          npm ci
+        run: npm ci
           
       - name: Run linter
-        working-directory: frontend
-        run: npm run lint
+        run: npm run lint -w frontend
           
       - name: Run Tests
-        working-directory: frontend
-        run: npm test
+        run: npm test -w frontend
           
       - name: Build Frontend
         env:
           TARGET_ENV: ${{ github.event.inputs.environment || 'dev' }}
           VITE_API_URL: ${{ secrets[format('API_ENDPOINT_{0}', github.event.inputs.environment || 'dev')] }}
-        run: |
-          cd frontend
-          npm run build
+        run: npm run build -w frontend
             
       - name: Deploy Frontend and invalidate CloudFront
         env:

@@ -43,9 +43,7 @@ jobs:
           aws-region: eu-central-1
           
       - name: Install CDK Dependencies
-        run: |
-          cd cdk
-          npm ci
+        run: npm ci
           
       - name: Deploy Infrastructure
         id: deploy
