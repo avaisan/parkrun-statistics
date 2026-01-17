@@ -1,7 +1,15 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 import { getHistoryofEvents, getEventResults } from './scraper.js';
 import { PARKRUN_EVENTS_PER_COUNTRY, CountryCode } from './events.js';
 import { saveEventResult } from './save_to_db.js';
+import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: resolve(__dirname, '../../.env') });
 
 interface IScraperOptions {
   countryCode?: CountryCode;
@@ -51,7 +59,9 @@ async function processEvent(countryCode: CountryCode, eventName: string, fromDat
   * If event already exists, it will not be saved again.
 */
 async function main(options: IScraperOptions) {
-  const prisma = new PrismaClient();
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  const adapter = new PrismaPg(pool);
+  const prisma = new PrismaClient({ adapter });
 
   try {
     const fromDate = getFromDate(options.fromDate);

@@ -10,16 +10,16 @@
         "test": "vitest run"
     },
     "dependencies": {
-        "@aws-sdk/client-s3": "^3.901.0",
+        "@aws-sdk/client-s3": "^3.971.0",
         "aws-lambda": "^1.0.7",
         "cors": "^2.8.5",
-        "express": "^5.2.0"
+        "express": "^5.2.1"
     },
     "devDependencies": {
         "@types/aws-lambda": "^8.10.155",
         "@types/cors": "^2.8.19",
-        "@types/express": "^5.0.5",
+        "@types/express": "^5.0.6",
         "@types/supertest": "^6.0.3",
-        "supertest": "^7.1.4"
+        "supertest": "^7.2.2"
     }
 }
