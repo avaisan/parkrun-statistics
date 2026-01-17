@@ -1,16 +1,27 @@
 import js from '@eslint/js'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
-import { fileURLToPath } from 'url'
-import { dirname } from 'path'
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default [
   {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/cdk.out/**', 'eslint.config.js']
+    ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/cdk.out/**', 'prisma.config.js']
   },
-  js.configs.recommended,
+  {
+    files: ['**/*.js', '**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        ...globals.node
+      }
+    },
+    ...js.configs.recommended,
+    rules: {
+      'no-unused-vars': 'error',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-duplicate-imports': 'error'
+    }
+  },
   ...tseslint.configs.recommended,
   {
     files: ['**/*.ts'],
@@ -19,13 +30,11 @@ export default [
       sourceType: 'module',
       globals: {
         ...globals.node
-      },
-      parserOptions: {
-        tsconfigRootDir: __dirname
       }
     },
     rules: {
-      'no-unused-vars': 'error',
+      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/no-explicit-any': 'warn',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-duplicate-imports': 'error'
     }
