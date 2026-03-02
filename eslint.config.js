@@ -13,22 +13,9 @@ export default [
       sourceType: 'module',
       globals: {
         ...globals.node
-      }
-    },
-    ...js.configs.recommended,
-    rules: {
-      'no-unused-vars': 'error',
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
-      'no-duplicate-imports': 'error'
-    }
-  },
-  {
-    files: ['**/*.js', '**/*.mjs'],
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'module',
-      globals: {
-        ...globals.node
+      },
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname
       }
     },
     ...js.configs.recommended,
