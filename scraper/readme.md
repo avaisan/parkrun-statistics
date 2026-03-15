@@ -15,18 +15,22 @@ Database runs in Docker container. Scraper only runs locally.
 1. Install dependencies:
 ```bash
 npm install
+```
+
+2. Generate Prisma client and build:
+```bash
 npm run build
 ```
 
-2. Start Docker containers from project root with `docker compose up -d`.
+3. Start Docker containers from project root with `docker compose up -d`.
 
-3. Create up `.env` file to `prisma` folder with db credentials for local setup (or set these in docker-compose for yourself, if running via docker).
+4. Create up `.env` file to `prisma` folder with db credentials for local setup (or set these in docker-compose for yourself, if running via docker).
 ```
 DATABASE_URL=postgresql://parkrun:parkrun@localhost:5433/parkrun?schema=public
 NODE_ENV=development
 ```
 
-4. Set up the database:
+5. Set up the database:
 ```bash
 # Start PostgreSQL in Docker and apply migrations
 npm run db:reset
