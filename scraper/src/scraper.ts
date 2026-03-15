@@ -7,7 +7,19 @@ const HEADERS = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.5',
     'Connection': 'keep-alive',
+    'Referer': 'https://www.parkrun.com/',
+    'DNT': '1',
+    'Upgrade-Insecure-Requests': '1',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
 };
+
+const DELAY_MS = 3000;
+
+function delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 interface IEventHistory {
     eventId: number;
@@ -34,9 +46,20 @@ export async function getHistoryofEvents(countryCode: CountryCode, eventName: st
         const historyUrl = `${config.baseUrl}/${eventName}/results/eventhistory/`;
         console.log(`\nFetching event history from: ${historyUrl}`);
         
-        const response = await axios.get(historyUrl, { headers: HEADERS });
+        await delay(DELAY_MS);
+        const response = await axios.get(historyUrl, { 
+            headers: HEADERS,
+            timeout: 30000,
+            maxRedirects: 5
+        });
+        
+        if (response.data.includes('captcha') || response.data.includes('Human Verification')) {
+            console.error('CAPTCHA detected. Try again later or reduce request frequency.');
+            return [];
+        }
+        
         const $ = cheerio.load(response.data);
-        const events: IEventHistory[] = [];
+        const events: IEventHistory[] = [];;
 
         $('.Results-table tr.Results-table-row').each((_index, row) => {
             const $row = $(row);
@@ -57,29 +80,56 @@ export async function getHistoryofEvents(countryCode: CountryCode, eventName: st
         console.log(`Found ${events.length} events since ${fromDate.toISOString().split('T')[0]}`);
         return events;
     } catch (error) {
-        console.error(`Error fetching event history for ${eventName}:`, error);
+        if (axios.isAxiosError(error) && error.response?.headers?.['x-amzn-waf-action'] === 'captcha') {
+            console.error(`CAPTCHA triggered for ${eventName}. Wait and retry later.`);
+        } else {
+            console.error(`Error fetching event history for ${eventName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
         return [];
     }
 }
 
+/*
+* Fetches the results for a given event ID.
+* Returns an object containing the event country, name, date, and an array of finish times in seconds.
+* Event date can be in two different formats in the page. If date is in format dd/mm/yyyy, it is converted to yyyy-mm-dd. If date is in format yyyy-mm-dd, it is returned as is.
+*/
 export async function getEventResults(countryCode: CountryCode, eventName: string, eventId: number): Promise<IEventResult | null> {
     const config = PARKRUN_EVENTS_PER_COUNTRY[countryCode];
     try {
         const eventUrl = `${config.baseUrl}/${eventName}/results/${eventId}/`;
         console.log(`\nFetching results for ${eventName} event #${eventId}`);
         
-        const response = await axios.get(eventUrl, { headers: HEADERS });
+        await delay(DELAY_MS);
+        const response = await axios.get(eventUrl, { 
+            headers: HEADERS,
+            timeout: 30000,
+            maxRedirects: 5
+        });
+        
+        if (response.data.includes('captcha') || response.data.includes('Human Verification')) {
+            console.error('CAPTCHA detected. Try again later or reduce request frequency.');
+            return null;
+        }
+        
         const $ = cheerio.load(response.data);
         
         const dateText = $('.format-date').text().trim();
-        const isoMatch = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
         
-        if (!isoMatch) {
-            console.error('Could not find date in page:', dateText);
-            return null;
+        let eventDate: string;
+        const isoMatch = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if (isoMatch) {
+            eventDate = dateText;
+        } else {
+            const oldMatch = dateText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+            if (oldMatch) {
+                eventDate = `${oldMatch[3]}-${oldMatch[2]}-${oldMatch[1]}`;
+            } else {
+                console.error('Could not find date in page:', dateText);
+                return null;
+            }
         }
-
-        const eventDate = dateText;
+        
         const finishTimes: number[] = [];
 
         $('.Results-table tbody tr').each((_, row) => {
@@ -107,7 +157,11 @@ export async function getEventResults(countryCode: CountryCode, eventName: strin
         };
 
     } catch (error) {
-        console.error(`Error fetching results for event #${eventId}:`, error);
+        if (axios.isAxiosError(error) && error.response?.headers?.['x-amzn-waf-action'] === 'captcha') {
+            console.error(`CAPTCHA triggered for event #${eventId}. Wait and retry later.`);
+        } else {
+            console.error(`Error fetching results for event #${eventId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
         return null;
     }
 }
