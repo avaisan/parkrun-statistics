@@ -71,15 +71,15 @@ export async function getEventResults(countryCode: CountryCode, eventName: strin
         const response = await axios.get(eventUrl, { headers: HEADERS });
         const $ = cheerio.load(response.data);
         
-        const dateText = $('.format-date').text();
-        const dateMatch = dateText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        const dateText = $('.format-date').text().trim();
+        const isoMatch = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
         
-        if (!dateMatch) {
+        if (!isoMatch) {
             console.error('Could not find date in page:', dateText);
             return null;
         }
 
-        const eventDate = `${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
+        const eventDate = dateText;
         const finishTimes: number[] = [];
 
         $('.Results-table tbody tr').each((_, row) => {

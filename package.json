@@ -10,7 +10,7 @@
     "cdk"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "npm run generate -w prisma && npm run build --workspaces",
     "db": "docker compose up -d postgres",
     "db:migrate": "npx prisma migrate deploy",
     "db:reset": "docker-compose down -v && docker-compose up -d postgres && npx prisma migrate reset --force",
