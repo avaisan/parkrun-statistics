@@ -27,16 +27,19 @@
     "stop": "docker compose down"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "@types/node": "^25.0.9",
-    "@vitest/coverage-v8": "^4.0.17",
-    "eslint": "^9.39.2",
-    "globals": "^17.0.0",
-    "prisma": "^7.2.0",
+    "@eslint/js": "^9.39.3",
+    "@types/node": "^25.3.3",
+    "@vitest/coverage-v8": "^4.0.18",
+    "eslint": "^9.39.3",
+    "globals": "^17.4.0",
+    "prisma": "^7.4.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.53.0",
-    "vitest": "^4.0.17"
+    "typescript-eslint": "^8.56.1",
+    "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1"
   }
 }

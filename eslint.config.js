@@ -13,6 +13,9 @@ export default [
       sourceType: 'module',
       globals: {
         ...globals.node
+      },
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname
       }
     },
     ...js.configs.recommended,
@@ -30,6 +33,9 @@ export default [
       sourceType: 'module',
       globals: {
         ...globals.node
+      },
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname
       }
     },
     rules: {
