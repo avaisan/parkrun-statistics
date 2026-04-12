@@ -12,7 +12,7 @@
     "@parkrun/prisma": "*",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.4.2",
-    "axios": "^1.13.2",
+    "axios": "^1.15.0",
     "cheerio": "^1.1.2",
     "pg": "^8.17.1"
   },
