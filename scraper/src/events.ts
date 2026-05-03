@@ -57,7 +57,8 @@ export const PARKRUN_EVENTS_PER_COUNTRY: Record<string, ICountry> = {
             "bergerstadion",
             "ekebergsletta",
             "toyen",
-            "greveskogen"
+            "greveskogen",
+            "flomvollen"
         ]
     },
     DK: {
@@ -74,7 +75,9 @@ export const PARKRUN_EVENTS_PER_COUNTRY: Record<string, ICountry> = {
             "fuglsangso",
             "brabrand",
             "nordrefaelled",
-            "nibe"
+            "nibe",
+            "lyngby",
+            "holbaekfaelled"
         ]
     }
 };
