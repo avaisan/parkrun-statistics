@@ -2,21 +2,25 @@
   "name": "@parkrun/root",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
   "workspaces": [
+    "prisma",
     "frontend",
     "scraper",
-    "prisma",
     "api",
     "cdk"
   ],
   "scripts": {
-    "build": "npm run generate -w prisma && npm run build --workspaces",
+    "build": "npm run build --workspaces",
     "db": "docker compose up -d postgres",
     "db:migrate": "npx prisma migrate deploy",
-    "db:reset": "docker-compose down -v && docker-compose up -d postgres && npx prisma migrate reset --force",
+    "db:reset": "docker compose down -v && docker compose up -d postgres && npx prisma migrate reset --force",
     "db:studio": "npx prisma studio",
     "scraper": "npm -w scraper run scraper --",
     "frontend": "npm run ui -w frontend",
+    "api": "npm run api -w api",
     "lint": "npm run lint --workspaces",
     "clean": "npm run clean --workspaces",
     "test": "npm run test --workspaces --if-present",
@@ -27,19 +31,24 @@
     "stop": "docker compose down"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.3",
-    "@types/node": "^25.3.3",
-    "@vitest/coverage-v8": "^4.0.18",
-    "eslint": "^9.39.3",
-    "globals": "^17.4.0",
-    "prisma": "^7.4.2",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.1",
-    "vitest": "^4.0.18"
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.19.2",
+    "@vitest/coverage-v8": "^5.1.0",
+    "eslint": "^10.14.0",
+    "globals": "^17.14.0",
+    "prisma": "^7.10.1",
+    "tsx": "^4.23.15",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.1.0"
   },
   "dependencies": {
-    "dotenv": "^17.3.1"
+    "dotenv": "^18.0.9"
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "prisma": true,
+    "@prisma/engines": true
   }
 }

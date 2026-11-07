@@ -8,14 +8,14 @@
     "lint": "eslint .",
     "cdk": "cdk",
     "deploy": "cdk deploy --all",
-    "clean": "rm -rf build cdk.out .cdk.staging",
+    "clean": "node -e \"for (const p of ['build', 'cdk.out', '.cdk.staging']) require('node:fs').rmSync(p, { recursive: true, force: true })\"",
     "destroy": "cdk destroy --all"
   },
   "devDependencies": {
-    "aws-cdk": "2.1108.0"
+    "aws-cdk": "2.1148.0"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.241.0",
-    "constructs": "^10.5.1"
+    "aws-cdk-lib": "2.275.0",
+    "constructs": "^10.8.1"
   }
 }

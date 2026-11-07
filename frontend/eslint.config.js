@@ -9,7 +9,7 @@ export default tseslint.config(
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
-    ignores: ['vite.config.ts', 'index.ts'],
+    ignores: ['vite.config.ts'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
@@ -34,7 +34,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['vite.config.ts', 'index.ts'],
+    files: ['vite.config.ts'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     languageOptions: {
       ecmaVersion: 2020,

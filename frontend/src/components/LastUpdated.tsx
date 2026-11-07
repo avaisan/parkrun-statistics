@@ -10,7 +10,6 @@ export const LastUpdated = () => {
     const fetchLatestDate = async () => {
         try {
             const response = await getLatestEventDate();
-            console.log('Received response:', response);
             if (response?.latest_date) {
                 setLatestDate(response.latest_date);
             }

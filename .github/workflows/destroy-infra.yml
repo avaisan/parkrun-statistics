@@ -33,16 +33,16 @@ jobs:
           echo "⚠️ WARNING: Destroying infrastructure for environment: ${{ inputs.environment }}"
           echo "This action cannot be undone!"
           
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
           
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: eu-central-1
@@ -58,7 +58,6 @@ jobs:
           TARGET_ENV: ${{ inputs.environment }}
         run: |
           cd cdk
-          STACK_NAME="ParkRunStack-${TARGET_ENV}"
           DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?contains(Aliases.Items[],\`${{ inputs.environment == 'dev' && 'parkrun-dev' || 'parkrun' }}.${DOMAIN_NAME}\`)].Id" --output text)
           
           if [ ! -z "$DISTRIBUTION_ID" ]; then

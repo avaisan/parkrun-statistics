@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
-import app from '../app';
-import * as dataService from '../services/data'
+import app from '../app.js';
+import * as dataService from '../services/data.js'
 
-vi.mock('../services/data');
+vi.mock('../services/data.js');
 
 const mockStats = [
     {
@@ -19,14 +19,14 @@ const mockStats = [
     }
 ];
 
-describe('Test Events API endpoints', () => {
+describe('Events API endpoints', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
     describe('GET /api/events', () => {
-        it('should return events data in correct format', async () => {
+        it('Given event stats are available, When GET /api/events is requested, Then should return 200 with event_quarterly_stats in the expected shape', async () => {
             vi.spyOn(dataService, 'readEventStats').mockResolvedValue(mockStats);
 
             const response = await request(app)
@@ -49,7 +49,7 @@ describe('Test Events API endpoints', () => {
             expect(event).toHaveProperty('avg_participants');
         });
 
-        it('should handle errors gracefully', async () => {
+        it('Given reading event stats fails, When GET /api/events is requested, Then should return 500 with an error body', async () => {
             vi.spyOn(dataService, 'readEventStats')
                 .mockRejectedValue(new Error('Failed to read stats'));
 

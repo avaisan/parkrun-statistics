@@ -3,19 +3,15 @@
     "version": "1.0.0",
     "type": "module",
     "private": true,
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
     "scripts": {
-      "build": "tsc",
-      "migrate": "prisma migrate deploy",
-      "reset": "prisma migrate reset --force",
-      "studio": "prisma studio",
+      "build": "prisma generate",
+      "migrate": "prisma migrate deploy --config ../prisma.config.ts",
+      "reset": "prisma migrate reset --force --config ../prisma.config.ts",
+      "studio": "prisma studio --config ../prisma.config.ts",
       "generate": "prisma generate",
-      "clean": "echo 'clean'",
+      "clean": "node -e \"require('node:fs').rmSync('../scraper/src/generated', { recursive: true, force: true })\"",
       "lint": "eslint ."
     },
     "devDependencies": {},
-    "dependencies": {
-      "@prisma/client": "^7.4.2"
-    }
+    "dependencies": {}
   }

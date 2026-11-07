@@ -19,7 +19,8 @@ export const PARKRUN_EVENTS_PER_COUNTRY: Record<string, ICountry> = {
             "vaaksynkanava",
             "tampere",
             "urheilupuisto",
-            "porinmetsa"
+            "porinmetsa",
+            "valkeinen"
         ]
     },
     SE: {

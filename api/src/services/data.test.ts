@@ -1,5 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { readFile } from 'fs/promises';
+import { resolve } from 'path';
 
 const mockS3Send = vi.fn();
 
@@ -39,8 +41,8 @@ describe('API data servicing', () => {
         process.env.DATA_BUCKET_NAME = 'test-bucket';
     });
 
-    it('should return properly formatted event stats from S3', async () => {
-            const { readEventStats } = await import('./data');
+    it('Given production mode and stats in S3, When reading event stats, Then should return the stats from the data bucket', async () => {
+            const { readEventStats } = await import('./data.js');
             
             mockS3Send.mockResolvedValueOnce({
                 Body: {
@@ -58,8 +60,8 @@ describe('API data servicing', () => {
             });
     });
 
-    it('should validate event stats structure', async () => {
-            const { readEventStats } = await import('./data');
+    it('Given production mode and stats in S3, When reading event stats, Then should return rows with all statistic fields', async () => {
+            const { readEventStats } = await import('./data.js');
             
             mockS3Send.mockResolvedValueOnce({
                 Body: {
@@ -80,15 +82,15 @@ describe('API data servicing', () => {
             expect(stats).toHaveProperty('avg_participants', expect.any(Number));
     });
 
-    it('should handle S3 errors gracefully', async () => {
-            const { readEventStats } = await import('./data');
+    it('Given S3 rejects the request, When reading event stats, Then should throw a read error', async () => {
+            const { readEventStats } = await import('./data.js');
             
             mockS3Send.mockRejectedValueOnce(new Error('S3 Error'));
             await expect(readEventStats()).rejects.toThrow('Failed to read event statistics');
     });
 
-    it('should return properly formatted latest date from S3', async () => {
-            const { readLatestDate } = await import('./data');
+    it('Given production mode and a latest date in S3, When reading latest date, Then should return it from the data bucket', async () => {
+            const { readLatestDate } = await import('./data.js');
             
             mockS3Send.mockResolvedValueOnce({
                 Body: {
@@ -106,8 +108,8 @@ describe('API data servicing', () => {
             });
     });
 
-    it('should validate latest date structure', async () => {
-            const { readLatestDate } = await import('./data');
+    it('Given production mode and a latest date in S3, When reading latest date, Then should return an object with a latest_date field', async () => {
+            const { readLatestDate } = await import('./data.js');
             
             mockS3Send.mockResolvedValueOnce({
                 Body: {
@@ -120,94 +122,63 @@ describe('API data servicing', () => {
             expect(new Date(result.latest_date)).toBeInstanceOf(Date);
     });
 
-    it('should handle S3 errors gracefully', async () => {
-            const { readLatestDate } = await import('./data');
+    it('Given S3 rejects the request, When reading latest date, Then should throw a read error', async () => {
+            const { readLatestDate } = await import('./data.js');
             
             mockS3Send.mockRejectedValueOnce(new Error('S3 Error'));
             await expect(readLatestDate()).rejects.toThrow('Failed to read latest date');
     });
 });
 
-describe('API contract tests', () => {
-    it('should have all required fields with correct types', () => {
-            const mockStat = {
-                eventName: "testRun",
-                eventCountry: "Finland",
-                year: 2025,
-                quarter: 1,
-                fastest_time: 15.00,
-                fastest_quartile: 20.00,
-                avg_finish_time: 30.00,
-                slowest_quartile: 35.00,
-                avg_participants: 25
-            };
-
-            expect(mockStat).toHaveProperty('eventName');
-            expect(typeof mockStat.eventName).toBe('string');
-            
-            expect(mockStat).toHaveProperty('eventCountry');
-            expect(typeof mockStat.eventCountry).toBe('string');
-            
-            expect(mockStat).toHaveProperty('year');
-            expect(typeof mockStat.year).toBe('number');
-            
-            expect(mockStat).toHaveProperty('quarter');
-            expect(typeof mockStat.quarter).toBe('number');
-            expect(mockStat.quarter).toBeGreaterThanOrEqual(1);
-            expect(mockStat.quarter).toBeLessThanOrEqual(4);
-            
-            expect(mockStat).toHaveProperty('fastest_time');
-            expect(typeof mockStat.fastest_time).toBe('number');
-            
-            expect(mockStat).toHaveProperty('fastest_quartile');
-            expect(typeof mockStat.fastest_quartile).toBe('number');
-            
-            expect(mockStat).toHaveProperty('avg_finish_time');
-            expect(typeof mockStat.avg_finish_time).toBe('number');
-            
-            expect(mockStat).toHaveProperty('slowest_quartile');
-            expect(typeof mockStat.slowest_quartile).toBe('number');
-            
-            expect(mockStat).toHaveProperty('avg_participants');
-            expect(typeof mockStat.avg_participants).toBe('number');
+describe('Local data files in development mode', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        process.env.NODE_ENV = 'development';
+        delete process.env.DATA_DIR;
     });
 
-    it('should validate time values are positive', () => {
-            const mockStat = {
-                fastest_time: 15.00,
-                fastest_quartile: 20.00,
-                avg_finish_time: 30.00,
-                slowest_quartile: 35.00,
-            };
-
-            expect(mockStat.fastest_time).toBeGreaterThan(0);
-            expect(mockStat.fastest_quartile).toBeGreaterThan(0);
-            expect(mockStat.avg_finish_time).toBeGreaterThan(0);
-            expect(mockStat.slowest_quartile).toBeGreaterThan(0);
+    afterEach(() => {
+        delete process.env.DATA_DIR;
     });
 
-    it('should validate time ordering', () => {
-            const mockStat = {
-                fastest_time: 15.00,
-                fastest_quartile: 20.00,
-                avg_finish_time: 30.00,
-                slowest_quartile: 35.00,
-            };
+    it('Given DATA_DIR is not set, When reading event stats, Then should read from the Docker mount path', async () => {
+        const { readEventStats } = await import('./data.js');
+        vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify({ event_quarterly_stats: mockStats }));
 
-            expect(mockStat.fastest_time).toBeLessThanOrEqual(mockStat.fastest_quartile);
-            expect(mockStat.fastest_quartile).toBeLessThanOrEqual(mockStat.avg_finish_time);
-            expect(mockStat.avg_finish_time).toBeLessThanOrEqual(mockStat.slowest_quartile);
+        const result = await readEventStats();
+
+        expect(readFile).toHaveBeenCalledWith(resolve('/app/data', 'parkrun_data.json'), 'utf-8');
+        expect(result).toEqual(mockStats);
     });
 
-    it('should have latest_date field with valid date format', () => {
-            const mockDate = {
-                latest_date: "2025-04-26"
-            };
+    it('Given DATA_DIR is an absolute path, When reading event stats, Then should read from that folder', async () => {
+        const { readEventStats } = await import('./data.js');
+        const dataDir = resolve('/custom/data');
+        process.env.DATA_DIR = dataDir;
+        vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify({ event_quarterly_stats: mockStats }));
 
-            expect(mockDate).toHaveProperty('latest_date');
-            expect(typeof mockDate.latest_date).toBe('string');
-            expect(mockDate.latest_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-            expect(new Date(mockDate.latest_date)).toBeInstanceOf(Date);
-            expect(isNaN(new Date(mockDate.latest_date).getTime())).toBe(false);
+        await readEventStats();
+
+        expect(readFile).toHaveBeenCalledWith(resolve(dataDir, 'parkrun_data.json'), 'utf-8');
+    });
+
+    it('Given DATA_DIR is a relative path, When reading latest date, Then should resolve it against the working directory', async () => {
+        const { readLatestDate } = await import('./data.js');
+        process.env.DATA_DIR = '../data';
+        vi.mocked(readFile).mockResolvedValueOnce(JSON.stringify(mockLatestDate));
+
+        const result = await readLatestDate();
+
+        expect(readFile).toHaveBeenCalledWith(resolve(process.cwd(), '../data', 'latest_date.json'), 'utf-8');
+        expect(result).toEqual(mockLatestDate);
+    });
+
+    it('Given the data file is missing, When reading latest date, Then should throw a read error', async () => {
+        const { readLatestDate } = await import('./data.js');
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+        process.env.DATA_DIR = '/missing';
+        vi.mocked(readFile).mockRejectedValueOnce(new Error('ENOENT'));
+
+        await expect(readLatestDate()).rejects.toThrow('Failed to read latest date');
     });
 });

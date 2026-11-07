@@ -4,19 +4,19 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "scraper": "prisma generate --schema=../prisma/schema.prisma && tsx src/index.ts",
+    "scraper": "tsx src/index.ts",
     "lint": "eslint .",
-    "clean": "rm -rf dist build function.zip"
+    "test": "vitest run",
+    "clean": "node -e \"for (const p of ['dist', 'build', 'function.zip']) require('node:fs').rmSync(p, { recursive: true, force: true })\""
   },
   "dependencies": {
-    "@parkrun/prisma": "*",
-    "@prisma/adapter-pg": "^7.2.0",
-    "@prisma/client": "^7.4.2",
-    "axios": "^1.13.2",
-    "cheerio": "^1.1.2",
-    "pg": "^8.17.1"
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "axios": "^1.21.0",
+    "cheerio": "^1.2.0",
+    "pg": "^8.23.1"
   },
   "devDependencies": {
-    "@types/pg": "^8.16.0"
+    "@types/pg": "^8.23.1"
   }
 }

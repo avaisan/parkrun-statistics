@@ -7,7 +7,7 @@ Database runs in Docker container. Scraper only runs locally.
 
 ## Prerequisites
 
-- Node.js v22.14.0 or above
+- Node.js v22.14.0 or above (v24 recommended)
 - Docker
 
 ## Setup
@@ -21,6 +21,7 @@ npm install
 ```bash
 npm run build
 ```
+`npm run scraper` does not generate the client itself. Run `npm run build` (or `npm run generate -w prisma` from the project root) again after a fresh install or a change to `prisma/schema.prisma`.
 
 3. Start Docker containers from project root with `docker compose up -d`.
 
@@ -59,7 +60,8 @@ npm run db:studio
 
 ### Data Collection with scraper
 Ensure that database is up and running.
-If event already exists in database, scraper tries to save but fails and moves on to next.
+Events are processed oldest first, and events already in the database are skipped without fetching their results.
+If parkrun answers with a CAPTCHA, the run stops and prints how far it got. Rerun the same command later; it continues where it stopped.
 ```bash
 #With default parameters:
 # Fetches events from all Nordic ParkRuns for the last 7 days

@@ -16,12 +16,65 @@ const HEADERS = {
 };
 
 const DELAY_MS = 3000;
+const MAX_RESULT_PAGES = 50;
+const NEXT_LINK_TEXTS = ['next', '»', '›'];
 
 function delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-interface IEventHistory {
+/**
+ * parkrun answered with a CAPTCHA (HTML challenge or AWS WAF captcha action).
+ * Thrown instead of returning empty/partial data so the caller can stop the whole run:
+ * a CAPTCHA is per client, so further requests would only hit it again.
+ */
+export class CaptchaError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'CaptchaError';
+    }
+}
+
+function isWafCaptcha(error: unknown): boolean {
+    return axios.isAxiosError(error) && error.response?.headers?.['x-amzn-waf-action'] === 'captcha';
+}
+
+function isCaptchaPage(html: string): boolean {
+    return html.includes('captcha') || html.includes('Human Verification');
+}
+
+/*
+ * Finds the next results page for the same event, or null when there is none.
+ * Only links under the event's own results path are followed, so a "next event"
+ * link can never merge another event's runners into this one. Visited pages are
+ * skipped to avoid loops.
+ */
+function findNextResultsPage($: cheerio.CheerioAPI, currentUrl: string, resultsPath: string, visited: Set<string>): string | null {
+    const candidates = [
+        $('a[rel="next"]').attr('href'),
+        $('a').filter((_, el) => NEXT_LINK_TEXTS.includes($(el).text().trim().toLowerCase())).first().attr('href')
+    ];
+
+    const current = new URL(currentUrl);
+    for (const href of candidates) {
+        if (!href) continue;
+
+        let resolved: URL;
+        try {
+            resolved = new URL(href, current);
+        } catch {
+            continue;
+        }
+
+        const sameEventResults = resolved.origin === current.origin && resolved.pathname.startsWith(resultsPath);
+        if (sameEventResults && !visited.has(resolved.href)) {
+            return resolved.href;
+        }
+    }
+    return null;
+}
+
+export interface IEventHistory {
     eventId: number;
     date: string;
 }
@@ -37,9 +90,10 @@ export interface IEventResult {
 export async function getHistoryofEvents(countryCode: CountryCode, eventName: string, fromDate: Date): Promise<IEventHistory[]> {
     /*
     * Fetches the event history for a given event name.
-    * Returns an array of event history entries.
-    * Each entry contains the event ID and date.
-    * The event ID is used to fetch the results for that event.
+    * Returns the events on or after fromDate, oldest first (ascending event number), so an
+    * interrupted run has stored a contiguous range and a rerun continues where it stopped.
+    * Each entry contains the event ID and date; the event ID is used to fetch the results.
+    * Throws CaptchaError when parkrun answers with a CAPTCHA.
     */
     const config = PARKRUN_EVENTS_PER_COUNTRY[countryCode];
     try {
@@ -53,13 +107,12 @@ export async function getHistoryofEvents(countryCode: CountryCode, eventName: st
             maxRedirects: 5
         });
         
-        if (response.data.includes('captcha') || response.data.includes('Human Verification')) {
-            console.error('CAPTCHA detected. Try again later or reduce request frequency.');
-            return [];
+        if (isCaptchaPage(response.data)) {
+            throw new CaptchaError(`CAPTCHA while fetching the event history of ${eventName}.`);
         }
-        
+
         const $ = cheerio.load(response.data);
-        const events: IEventHistory[] = [];;
+        const events: IEventHistory[] = [];
 
         $('.Results-table tr.Results-table-row').each((_index, row) => {
             const $row = $(row);
@@ -70,21 +123,24 @@ export async function getHistoryofEvents(countryCode: CountryCode, eventName: st
                 const eventDate = new Date(String(date));
                 if (eventDate >= fromDate) {
                     events.push({
-                        eventId: parseInt(eventId),
+                        eventId: parseInt(String(eventId)),
                         date: String(date)
                     });
                 }
             }
         });
-        
+
+        // The history page lists the newest event first; process oldest first
+        events.sort((a, b) => a.eventId - b.eventId);
+
         console.log(`Found ${events.length} events since ${fromDate.toISOString().split('T')[0]}`);
         return events;
     } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.headers?.['x-amzn-waf-action'] === 'captcha') {
-            console.error(`CAPTCHA triggered for ${eventName}. Wait and retry later.`);
-        } else {
-            console.error(`Error fetching event history for ${eventName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        if (error instanceof CaptchaError) throw error;
+        if (isWafCaptcha(error)) {
+            throw new CaptchaError(`CAPTCHA (AWS WAF) while fetching the event history of ${eventName}.`);
         }
+        console.error(`Error fetching event history for ${eventName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         return [];
     }
 }
@@ -93,60 +149,89 @@ export async function getHistoryofEvents(countryCode: CountryCode, eventName: st
 * Fetches the results for a given event ID.
 * Returns an object containing the event country, name, date, and an array of finish times in seconds.
 * Event date can be in two different formats in the page. If date is in format dd/mm/yyyy, it is converted to yyyy-mm-dd. If date is in format yyyy-mm-dd, it is returned as is.
+* Returns null rather than partial data (no finish times, page limit hit), because a saved event
+* is never scraped again. Throws CaptchaError on a CAPTCHA, on any page.
 */
 export async function getEventResults(countryCode: CountryCode, eventName: string, eventId: number): Promise<IEventResult | null> {
     const config = PARKRUN_EVENTS_PER_COUNTRY[countryCode];
     try {
-        const eventUrl = `${config.baseUrl}/${eventName}/results/${eventId}/`;
+        const startUrl = `${config.baseUrl}/${eventName}/results/${eventId}/`;
+        const resultsPath = new URL(startUrl).pathname;
         console.log(`\nFetching results for ${eventName} event #${eventId}`);
-        
-        await delay(DELAY_MS);
-        const response = await axios.get(eventUrl, { 
-            headers: HEADERS,
-            timeout: 30000,
-            maxRedirects: 5
-        });
-        
-        if (response.data.includes('captcha') || response.data.includes('Human Verification')) {
-            console.error('CAPTCHA detected. Try again later or reduce request frequency.');
-            return null;
-        }
-        
-        const $ = cheerio.load(response.data);
-        
-        const dateText = $('.format-date').text().trim();
-        
-        let eventDate: string;
-        const isoMatch = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
-        if (isoMatch) {
-            eventDate = dateText;
-        } else {
-            const oldMatch = dateText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-            if (oldMatch) {
-                eventDate = `${oldMatch[3]}-${oldMatch[2]}-${oldMatch[1]}`;
-            } else {
-                console.error('Could not find date in page:', dateText);
+
+        const finishTimes: number[] = [];
+        let eventDate: string | null = null;
+
+        // Follow pagination within this event's results until exhausted or max pages reached
+        const visited = new Set<string>();
+        let nextUrl: string | null = startUrl;
+
+        while (nextUrl) {
+            if (visited.size >= MAX_RESULT_PAGES) {
+                console.error(`Stopped after ${MAX_RESULT_PAGES} result pages for ${eventName} event #${eventId}; skipping to avoid saving partial results.`);
                 return null;
             }
-        }
-        
-        const finishTimes: number[] = [];
+            const currentUrl: string = nextUrl;
+            visited.add(currentUrl);
 
-        $('.Results-table tbody tr').each((_, row) => {
-            const cols = $(row).find('td');
-            if (cols.length < 6) return;
+            await delay(DELAY_MS);
+            const response = await axios.get(currentUrl, {
+                headers: HEADERS,
+                timeout: 30000,
+                maxRedirects: 5
+            });
 
-            const timeText = $(cols[5]).text().trim();
-            const timeMatch = timeText.match(/(?:(\d+):)?(\d+):(\d+)/);
-
-            if (timeMatch) {
-                const [, hours, minutes, seconds] = timeMatch;
-                const totalSeconds = (hours ? parseInt(hours) * 3600 : 0) +
-                                   parseInt(minutes) * 60 +
-                                   parseInt(seconds);
-                finishTimes.push(totalSeconds);
+            if (isCaptchaPage(response.data)) {
+                throw new CaptchaError(`CAPTCHA while fetching results of ${eventName} event #${eventId}.`);
             }
-        });
+
+            const $ = cheerio.load(response.data);
+
+            // Extract date once (prefer first page)
+            if (!eventDate) {
+                const dateText = $('.format-date').first().text().trim();
+                const isoMatch = dateText.match(/(\d{4})-(\d{2})-(\d{2})/);
+                if (isoMatch) {
+                    eventDate = isoMatch[0];
+                } else {
+                    const oldMatch = dateText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                    if (oldMatch) {
+                        eventDate = `${oldMatch[3]}-${oldMatch[2]}-${oldMatch[1]}`;
+                    } else {
+                        // keep null and continue; we may find date on another page
+                        console.warn('Could not find date in page:', dateText);
+                    }
+                }
+            }
+
+            $('.Results-table tbody tr').each((_, row) => {
+                const cols = $(row).find('td');
+                if (cols.length < 6) return;
+
+                const timeText = $(cols[5]).text().trim();
+                const timeMatch = timeText.match(/(?:(\d+):)?(\d+):(\d+)/);
+
+                if (timeMatch) {
+                    const [, hours, minutes, seconds] = timeMatch;
+                    const totalSeconds = (hours ? parseInt(hours) * 3600 : 0) +
+                                       parseInt(minutes) * 60 +
+                                       parseInt(seconds);
+                    finishTimes.push(totalSeconds);
+                }
+            });
+
+            nextUrl = findNextResultsPage($, currentUrl, resultsPath, visited);
+        }
+
+        if (!eventDate) {
+            console.error('Could not determine event date for', eventId);
+            return null;
+        }
+
+        if (finishTimes.length === 0) {
+            console.error(`No finish times found for ${eventName} event #${eventId}; skipping.`);
+            return null;
+        }
 
         return {
             eventCountry: config.country,
@@ -157,8 +242,9 @@ export async function getEventResults(countryCode: CountryCode, eventName: strin
         };
 
     } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.headers?.['x-amzn-waf-action'] === 'captcha') {
-            console.error(`CAPTCHA triggered for event #${eventId}. Wait and retry later.`);
+        if (error instanceof CaptchaError) throw error;
+        if (isWafCaptcha(error)) {
+            throw new CaptchaError(`CAPTCHA (AWS WAF) while fetching results of ${eventName} event #${eventId}.`);
         } else {
             console.error(`Error fetching results for event #${eventId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }

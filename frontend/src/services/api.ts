@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { QuarterlyStats } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL;
+// API Gateway's URL ends with the stage and a slash (".../prod/"); drop trailing slashes so paths join cleanly
+const API_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
 
 interface IEventsResponse {
     event_quarterly_stats: QuarterlyStats[];
