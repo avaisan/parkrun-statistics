@@ -27,11 +27,43 @@ permissions:
   id-token: write
   contents: read
 
+# One run per environment at a time; a newer run waits instead of overlapping
+concurrency:
+  group: deploy-api-${{ github.event.inputs.environment || 'dev' }}
+  cancel-in-progress: false
+
 jobs:
+  # A push that also changes the infrastructure must not deploy in parallel with
+  # Deploy Infrastructure: both would update the same Lambda/stack at once (409 conflict,
+  # stack rollback). Such pushes are skipped here; this workflow then runs via
+  # workflow_run after Deploy Infrastructure has succeeded.
+  check-infra-change:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      infra: ${{ steps.filter.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            infra:
+              - 'cdk/**'
+              - '.github/workflows/deploy-infra.yml'
+
   deploy-api:
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment || 'dev' }}
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
+    needs: check-infra-change
+    # !cancelled() lets this job run when check-infra-change was skipped (non-push events)
+    if: >-
+      ${{ !cancelled() &&
+      needs.check-infra-change.result != 'failure' &&
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') &&
+      (github.event_name != 'push' || needs.check-infra-change.outputs.infra != 'true') }}
     
     steps:
       - uses: actions/checkout@v7
