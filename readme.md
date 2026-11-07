@@ -52,6 +52,10 @@ Data update relies on manual updates for now, as source data has to be fetched f
 
 ### Cloud setup
 1. Run CloudFormation stack `oidc-role.yml` to your AWS account to setup permissions for GitHub Actions.
+   Bootstrap CDK in both regions used by the app (the CloudFront certificate stack is in us-east-1):
+   ```bash
+   npx cdk bootstrap aws://<account-id>/eu-central-1 aws://<account-id>/us-east-1
+   ```
 2. Add these secrets to GitHub repo:
 - AWS_ROLE_ARN (see output from oidc-role.yml)
 - AWS_ACCOUNT_ID

@@ -11,11 +11,13 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 
-interface IParkRunStackProps extends cdk.StackProps {
+export interface IParkRunStackProps extends cdk.StackProps {
   domainName: string;
   hostedZoneId: string;
   environmentName: string;
   subdomain: string;
+  /** us-east-1 certificate from ParkRunCertificateStack (requires crossRegionReferences). */
+  certificate: acm.ICertificate;
 }
 
 export class ParkRunStack extends cdk.Stack {
@@ -29,11 +31,7 @@ export class ParkRunStack extends cdk.Stack {
       zoneName: props.domainName
     });
 
-    const certificate = new acm.DnsValidatedCertificate(this, 'Certificate', {
-      domainName: fullDomain,
-      hostedZone: hostedZone,
-      region: 'us-east-1',
-    });
+    const certificate = props.certificate;
 
     const dataBucket = new s3.Bucket(this, 'ParkRunDataBucket', {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,

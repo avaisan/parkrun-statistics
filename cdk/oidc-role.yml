@@ -45,7 +45,14 @@ Resources:
                   - iam:*
                 Resource: "*"
 
-              # Route53 permissions for domain management
+              # Let the CDK CLI use the bootstrap roles (deploy, file publishing, lookup) in every
+              # bootstrapped region (eu-central-1 and us-east-1). Without this it falls back to
+              # this role's own permissions ("could not be used to assume ... Proceeding anyway").
+              - Effect: Allow
+                Action: sts:AssumeRole
+                Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/cdk-hnb659fds-*"
+
+              # Route53 permissions for domain management (incl. ACM DNS validation records)
               - Effect: Allow
                 Action:
                   - route53:GetHostedZone
@@ -55,6 +62,9 @@ Resources:
                   - route53:ListResourceRecordSets
                 Resource: 
                   - !Sub "arn:aws:route53:::hostedzone/*"
+              - Effect: Allow
+                Action: route53:GetChange
+                Resource: "arn:aws:route53:::change/*"
               
               # ACM permissions for certificate
               - Effect: Allow
@@ -64,6 +74,9 @@ Resources:
                   - acm:DeleteCertificate
                   - acm:ListCertificates
                   - acm:AddTagsToCertificate
+                  - acm:ListTagsForCertificate
+                  - acm:RemoveTagsFromCertificate
+                  - acm:GetCertificate
                 Resource: "*"
               - Effect: Allow
                 Action:
@@ -79,7 +92,8 @@ Resources:
                   - "arn:aws:s3:::*"
                   - "arn:aws:s3:::*/*"
               
-              # SSM permissions for CDK bootstrap
+              # SSM permissions for CDK bootstrap (version lookup) and cross-region exports,
+              # in every region: the certificate stack is deployed to us-east-1
               - Effect: Allow
                 Action:
                   - ssm:GetParameter
@@ -87,8 +101,8 @@ Resources:
                   - ssm:PutParameter
                   - ssm:DeleteParameter
                 Resource: 
-                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/cdk-bootstrap/*
-                  - !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/cdk/*
+                  - !Sub arn:aws:ssm:*:${AWS::AccountId}:parameter/cdk-bootstrap/*
+                  - !Sub arn:aws:ssm:*:${AWS::AccountId}:parameter/cdk/*
 
               # Lambda and API Gateway permissions
               - Effect: Allow

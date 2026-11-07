@@ -136,8 +136,13 @@ There are no metrics, tracing or alerting in the code. The Lambda writes one JSO
 
 ### AWS deployment
 
-Infrastructure (`cdk/lib/infrastructure.ts`, stack `parkrun-stack-<env>`, region `eu-central-1`):
-- Website: private S3 bucket → CloudFront (**Origin Access Control**, HTTPS, custom pages: 403 and 404 → `/404.html`, 500 → `/500.html`) → Route 53 alias `parkrun-dev.<domain>` (dev) / `parkrun.<domain>` (prod). With OAC, CloudFront can read objects but not list the bucket, so S3 returns 403 for missing files; hence the 403 mapping. The ACM certificate is in `us-east-1` (still the deprecated `DnsValidatedCertificate`; see the plan in `../.github/agent-sessions/cdk-certificate-and-feature-flags/spec.md`).
+Infrastructure (`cdk/lib/app.ts` wires the stacks; `cdk deploy --all` deploys both, certificate first):
+- `parkrun-certificate-<env>` (`cdk/lib/certificate.ts`, region **us-east-1**): the ACM certificate for `<subdomain>.<domain>`, DNS-validated in the Route 53 zone. CloudFront only accepts certificates from us-east-1, so only this small stack lives there.
+- `parkrun-stack-<env>` (`cdk/lib/infrastructure.ts`, region `eu-central-1`): everything else. It reads the certificate ARN via `crossRegionReferences` (an SSM parameter `/cdk/exports/...` in eu-central-1, written and read by CDK custom resources). References are `strong`, so the certificate can't be deleted while the distribution uses it.
+- Both regions must be CDK-bootstrapped (`cdk bootstrap aws://<account>/eu-central-1 aws://<account>/us-east-1`).
+- Feature flags: all 89 recommended flags are set in `cdk/cdk.json`. `@aws-cdk/core:defaultCrossStackReferences` is set to `strong` (not the recommended `weak`, which would remove the cross-region export). `cdk synth` prints no warnings.
+- CDK assertion tests (`cdk/test/app.test.ts`, `npm test -w cdk`) cover the certificate stack, the cross-region certificate reference, OAC + error pages, Lambda runtime/CORS/log group and the dev/prod domains. They run in PR checks and before every infra deploy.
+- Website: private S3 bucket → CloudFront (**Origin Access Control**, HTTPS, custom pages: 403 and 404 → `/404.html`, 500 → `/500.html`) → Route 53 alias `parkrun-dev.<domain>` (dev) / `parkrun.<domain>` (prod). With OAC, CloudFront can read objects but not list the bucket, so S3 returns 403 for missing files; hence the 403 mapping.
 - API: API Gateway REST API `parkrun-api-<env>` with `GET /api/events`, `/api/latest-date`, `/api/health` → Lambda `parkrun-api-<env>` (Node 24 / `nodejs24.x`, 256 MB, 30 s).
   - Environment: `NODE_ENV=<env>`, `DATA_BUCKET_NAME=<data bucket>`, `ALLOWED_ORIGIN=https://<subdomain>.<domain>` (CORS; `*` when unset, e.g. locally).
   - The handler matches routes exactly, after collapsing duplicate slashes and trailing slashes. Other methods get 405; OPTIONS gets 204.
@@ -152,7 +157,11 @@ Deployment is done by GitHub Actions with OIDC (`AWS_ROLE_ARN`, from `cdk/oidc-r
 - `deploy-infra.yml`: on push to `main` touching `cdk/**`, or manual (dev/prod). Runs `cdk deploy` and prints the stack outputs. Nothing is copied into repo secrets, so no personal access token is needed. CDK only creates the Lambda with placeholder code.
 - `deploy-api.yml`: on push to `main` touching `api/**`, after a successful infra run, or manual. Lint → test → `tsc` → zip `api/dist` with `npm install --omit=dev` → `aws lambda update-function-code`.
 - `deploy-frontend.yml`: same triggers for `frontend/**`. Reads `BucketName`, `DistributionId` and `ApiEndpoint` from the `parkrun-stack-<env>` CloudFormation outputs, then builds with `VITE_API_URL=<ApiEndpoint>` (the build includes the type-check), runs `aws s3 sync --delete` and invalidates CloudFront `/*`.
-- Required GitHub settings: secrets `AWS_ROLE_ARN`, `AWS_ACCOUNT_ID`, `HOSTED_ZONE_ID`; variable `DOMAIN_NAME`. The old `GH_PA_TOKEN`, `FRONTEND_BUCKET_*`, `DATA_BUCKET_*`, `CLOUDFRONT_ID_*` and `API_ENDPOINT_*` secrets are no longer used and can be deleted.
+- Required GitHub settings: secrets `AWS_ROLE_ARN`, `AWS_ACCOUNT_ID`, `HOSTED_ZONE_ID`; variable `DOMAIN_NAME`. (The old secret-copy secrets and `GH_PA_TOKEN` were deleted on 2026-11-07.)
+- `cdk/oidc-role.yml` (deployed manually as a CloudFormation stack) grants the GitHub role:
+  - `sts:AssumeRole` on the CDK bootstrap roles (`cdk-hnb659fds-*`), so `cdk deploy` uses the bootstrap roles in both regions;
+  - its own fallback permissions, with SSM allowed in all regions.
+  Redeploy that stack after changing the file.
 - **No parallel deploys of the same resources.** A push to `main` that changes `cdk/**` (or `deploy-infra.yml`) together with `api/**` or `frontend/**` skips the push-triggered API/frontend deploy; a `check-infra-change` job using `dorny/paths-filter` decides this. Those deploys then run via `workflow_run` once Deploy Infrastructure has succeeded. Before this, both ran at once and CloudFormation's Lambda update failed with a 409 and rolled back. Each deploy workflow also has a `concurrency` group per environment, so its runs never overlap.
 - Automatic runs always target **dev** (including API/frontend runs chained after a manual prod infra run). For prod, run Deploy Infrastructure, then Deploy API, then Deploy Frontend manually, one at a time. Prod is deployed only by manually running each workflow with `environment: prod`.
 - `pull-request-checks.yml` runs for changed workspaces on PRs. Root `package.json`, the lockfile and `eslint.config.js` count as changes to every workspace.
@@ -167,8 +176,6 @@ Deployment is done by GitHub Actions with OIDC (`AWS_ROLE_ARN`, from `cdk/oidc-r
 
 ### Known runtime issues (as of 2026-11-07)
 
-- `DnsValidatedCertificate` is deprecated, and 85 CDK feature flags are unset. Both need AWS-side changes (bootstrapping us-east-1, `cdk diff` against dev), so they are planned in `../.github/agent-sessions/cdk-certificate-and-feature-flags/spec.md` and still await approval.
-- The OAI → OAC switch is not yet deployed. Deploy to dev first and check the site (including a missing page → `/404.html`); CloudFront may briefly return 403 while the update propagates.
 - `npm audit`: 11 moderate findings, all the transitive `minimatch` ReDoS (GHSA-g3hv-75wg-m249) via eslint, typescript-eslint and aws-cdk-lib (build-time tools only). These wait for upstream fixes; don't apply `npm audit fix --force`, which downgrades majors.
 
 ### Testing

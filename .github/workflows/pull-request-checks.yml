@@ -137,6 +137,7 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run lint -w cdk
+      - run: npm test -w cdk
       - run: npm run build -w cdk
       - name: Synthesize (offline, placeholder account and domain)
         working-directory: cdk
