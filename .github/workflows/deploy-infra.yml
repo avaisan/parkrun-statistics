@@ -43,6 +43,9 @@ jobs:
           
       - name: Install CDK Dependencies
         run: npm ci
+
+      - name: Test CDK app
+        run: npm test -w cdk
           
       - name: Deploy Infrastructure
         id: deploy

@@ -6,6 +6,7 @@
     "build": "tsc",
     "watch": "tsc -w",
     "lint": "eslint .",
+    "test": "vitest run",
     "cdk": "cdk",
     "deploy": "cdk deploy --all",
     "clean": "node -e \"for (const p of ['build', 'cdk.out', '.cdk.staging']) require('node:fs').rmSync(p, { recursive: true, force: true })\"",

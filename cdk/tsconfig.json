@@ -19,7 +19,8 @@
   },
   "include": [
     "bin/**/*.ts",
-    "lib/**/*.ts"
+    "lib/**/*.ts",
+    "test/**/*.ts"
   ],
   "exclude": [
     "node_modules",
