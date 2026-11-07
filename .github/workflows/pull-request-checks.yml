@@ -10,6 +10,11 @@ on:
       - 'cdk/**'
       - 'scraper/**'
       - 'prisma/**'
+      - 'data/*.template.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'eslint.config.js'
+      - 'prisma.config.ts'
       - '.github/workflows/**'
       - '!**.md'
 
@@ -25,33 +30,51 @@ jobs:
       scraper: ${{ steps.filter.outputs.scraper }}
       cdk: ${{ steps.filter.outputs.cdk }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
+          # Root dependency/tooling changes affect every workspace
           filters: |
+            shared: &shared
+              - 'package.json'
+              - 'package-lock.json'
+              - 'eslint.config.js'
+              - '.github/workflows/pull-request-checks.yml'
             api:
+              - *shared
               - 'api/**'
+              - 'data/*.template.json'
             frontend:
+              - *shared
               - 'frontend/**'
             prisma:
+              - *shared
               - 'prisma/**'
+              - 'prisma.config.ts'
             scraper:
+              - *shared
               - 'scraper/**'
+              - 'prisma/schema.prisma'
             cdk:
+              - *shared
               - 'cdk/**'
 
   prisma:
     needs: check-changes
     if: ${{ needs.check-changes.outputs.prisma == 'true' }}
     runs-on: ubuntu-latest
+    env:
+      # Only parsed by prisma.config.ts; no database is contacted
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
+      - run: npx prisma validate
       - run: npm run lint -w prisma
 
   api:
@@ -59,51 +82,67 @@ jobs:
     if: ${{ needs.check-changes.outputs.api == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
       - run: npm run lint -w api
       - run: npm test -w api
+      - run: npm run build -w api
 
   frontend:
     needs: check-changes
     if: ${{ needs.check-changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
       - run: npm run lint -w frontend
       - run: npm test -w frontend
+      # Includes the TypeScript type-check (vite build alone does not type-check)
+      - run: npm run build -w frontend
 
   scraper:
     needs: check-changes
     if: ${{ needs.check-changes.outputs.scraper == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
+      # The scraper imports the generated Prisma client (scraper/src/generated, gitignored)
+      - run: npm run generate -w prisma
       - run: npm run lint -w scraper
+      - run: npm test -w scraper
+      - run: npm run build -w scraper
 
   cdk:
     needs: check-changes
     if: ${{ needs.check-changes.outputs.cdk == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'npm'
       - run: npm ci
       - run: npm run lint -w cdk
+      - run: npm run build -w cdk
+      - name: Synthesize (offline, placeholder account and domain)
+        working-directory: cdk
+        env:
+          AWS_ACCOUNT_ID: '123456789012'
+          HOSTED_ZONE_ID: Z0000000000000
+          DOMAIN_NAME: example.com
+          TARGET_ENV: dev
+        run: npx cdk synth --quiet

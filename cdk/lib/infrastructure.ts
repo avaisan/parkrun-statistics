@@ -8,6 +8,7 @@ import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 
 interface IParkRunStackProps extends cdk.StackProps {
@@ -26,13 +27,13 @@ export class ParkRunStack extends cdk.Stack {
     const hostedZone = route53.HostedZone.fromHostedZoneAttributes(this, 'HostedZone', {
       hostedZoneId: props.hostedZoneId,
       zoneName: props.domainName
-    });;
+    });
 
     const certificate = new acm.DnsValidatedCertificate(this, 'Certificate', {
       domainName: fullDomain,
       hostedZone: hostedZone,
       region: 'us-east-1',
-    });;
+    });
 
     const dataBucket = new s3.Bucket(this, 'ParkRunDataBucket', {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -49,12 +50,10 @@ export class ParkRunStack extends cdk.Stack {
       enforceSSL: true
     });
 
-    const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, 'OAI');
-    websiteBucket.grantRead(originAccessIdentity);
-
     const distribution = new cloudfront.Distribution(this, 'Distribution', {
       defaultBehavior: {
-        origin: new origins.S3Origin(websiteBucket, { originAccessIdentity }),
+        // Origin Access Control (replaces the deprecated Origin Access Identity); CDK adds the bucket policy
+        origin: origins.S3BucketOrigin.withOriginAccessControl(websiteBucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         compress: true
@@ -63,6 +62,13 @@ export class ParkRunStack extends cdk.Stack {
       certificate: certificate,
       defaultRootObject: 'index.html',
       errorResponses: [
+        {
+          // With OAC CloudFront may only read objects, not list the bucket, so a missing object returns 403
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/404.html',
+          ttl: cdk.Duration.minutes(0)
+        },
         {
           httpStatus: 404,
           responseHttpStatus: 200,
@@ -89,9 +95,17 @@ export class ParkRunStack extends cdk.Stack {
       )
     });
 
+    // Explicit log group with retention. A new name is used because Lambda already created
+    // /aws/lambda/parkrun-api-<env> outside CloudFormation (it never expires; delete it manually when no longer needed).
+    const apiLogGroup = new logs.LogGroup(this, 'ParkRunApiLogGroup', {
+      logGroupName: `/parkrun/api-${props.environmentName}`,
+      retention: logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.DESTROY
+    });
+
     const apiFunction = new lambda.Function(this, 'ParkRunApiFunction', {
       functionName: `parkrun-api-${props.environmentName}`,
-      runtime: lambda.Runtime.NODEJS_22_X,
+      runtime: lambda.Runtime.NODEJS_24_X,
       handler: 'index.handler',
       code: lambda.Code.fromInline(`
         export const handler = async (event) => {
@@ -108,8 +122,9 @@ export class ParkRunStack extends cdk.Stack {
       environment: {
         NODE_ENV: props.environmentName,
         DATA_BUCKET_NAME: dataBucket.bucketName,
-        NODE_OPTIONS: '--experimental-modules --es-module-specifier-resolution=node'
+        ALLOWED_ORIGIN: `https://${fullDomain}`
       },
+      logGroup: apiLogGroup,
       memorySize: 256,
       timeout: cdk.Duration.seconds(30),
     });
@@ -174,6 +189,11 @@ export class ParkRunStack extends cdk.Stack {
       value: api.url,
       description: 'API Gateway endpoint URL',
       exportName: `ParkRunApiEndpoint-${props.environmentName}`
+    });
+
+    new cdk.CfnOutput(this, 'ApiLogGroupName', {
+      value: apiLogGroup.logGroupName,
+      description: 'CloudWatch log group of the API Lambda'
     });
 
     new cdk.CfnOutput(this, 'LambdaName', {

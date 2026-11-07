@@ -1,8 +1,10 @@
+// Prisma 7 "prisma-client" generator. Only the scraper uses the client, so it is generated there
+// (gitignored; created by `npm run build` or `npm run generate -w prisma`).
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
-  previewFeatures = ["views"]
-  binaryTargets   = ["native", "rhel-openssl-1.0.x"]
+  provider            = "prisma-client"
+  output              = "../scraper/src/generated/prisma"
+  importFileExtension = "js" // scraper compiles with moduleResolution "nodenext"
+  previewFeatures     = ["views"] // still a preview feature in Prisma 7.10
 }
 
 datasource db {

@@ -1,21 +1,14 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
 import { getHistoryofEvents, getEventResults } from './scraper.js';
 import { PARKRUN_EVENTS_PER_COUNTRY, CountryCode } from './events.js';
-import { saveEventResult } from './save_to_db.js';
+import { saveEventResult, getStoredEventIds, disconnectDatabase } from './save_to_db.js';
+import { processEvent, emptyRunStats, ScrapeInterruptedError, IEventProcessingDeps } from './process_event.js';
+import { parseScraperArgs, IScraperOptions, USAGE } from './cli.js';
 import * as dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: resolve(__dirname, '../../.env') });
-
-interface IScraperOptions {
-  countryCode?: CountryCode;
-  eventName?: string;
-  fromDate?: string;
-}
+dotenv.config({ path: resolve(__dirname, '../../.env'), quiet: true });
 
 /*
   * Get the date from the command line argument.
@@ -30,38 +23,24 @@ function getFromDate(dateString?: string): Date {
   return date;
 }
 
-/*
-  * Process each event for the given country code.
-  * Fetch the event history and results, then save to the database.
-*/
-async function processEvent(countryCode: CountryCode, eventName: string, fromDate: Date) {
-  const eventHistory = await getHistoryofEvents(countryCode, eventName, fromDate);
-  
-  if (eventHistory.length === 0) {
-    console.log(`No events found for ${eventName} since ${fromDate.toISOString().split('T')[0]}`);
-    return;
-  }
-
-  for (const event of eventHistory) {
-    const eventResult = await getEventResults(countryCode, eventName, event.eventId);
-    
-    if (eventResult) {
-      console.log(`Found ${eventResult.finishTimes.length} results for event #${event.eventId}`);
-      await saveEventResult(eventResult);
-    }
-  }
-}
+const deps: IEventProcessingDeps = {
+  getHistory: getHistoryofEvents,
+  getResults: getEventResults,
+  getStoredIds: getStoredEventIds,
+  save: saveEventResult
+};
 
 /*
   * Main function to run the scraper.
-  * It connects to the database, calls function processEvent for each event,
-  * and saves the results to the database.
-  * If event already exists, it will not be saved again.
+  * Events are processed oldest first; events already in the database are not fetched again.
+  * On a CAPTCHA the run stops; rerunning the same command continues where it stopped.
 */
+function runSummary(stats: ReturnType<typeof emptyRunStats>): string {
+  return `saved ${stats.saved}, already stored (not fetched) ${stats.alreadyStored}, already existed ${stats.duplicate}, invalid ${stats.invalid}, failed ${stats.failed}`;
+}
+
 async function main(options: IScraperOptions) {
-  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
-  const adapter = new PrismaPg(pool);
-  const prisma = new PrismaClient({ adapter });
+  const stats = emptyRunStats();
 
   try {
     const fromDate = getFromDate(options.fromDate);
@@ -79,37 +58,44 @@ async function main(options: IScraperOptions) {
 
       for (const eventName of eventsToProcess) {
         console.log(`\nProcessing ${eventName}`);
-        await processEvent(countryCode, eventName, fromDate);
+        await processEvent(countryCode, eventName, fromDate, stats, deps);
       }
     }
 
-    console.log('Scraping completed successfully');
+    const summary = runSummary(stats);
+    if (stats.failed > 0 || stats.invalid > 0) {
+      console.error(`Scraping completed with problems: ${summary}. Failed events are retried on the next run.`);
+      process.exitCode = 1;
+    } else {
+      console.log(`Scraping completed successfully: ${summary}`);
+    }
   } catch (error) {
+    if (error instanceof ScrapeInterruptedError) {
+      console.error(`
+${error.message} Stopped the run so no later events are scraped out of order.`);
+      console.error(`So far: ${runSummary(stats)}.`);
+      console.error('Rerun the same command once the CAPTCHA has cleared: stored events are skipped without being fetched.');
+      console.error(`To continue only this event: npm run scraper -- --event ${error.eventName} --from ${error.resumeFrom}`);
+      process.exitCode = 1;
+      return;
+    }
     console.error('Error:', error);
-    process.exit(1);
+    // exitCode instead of process.exit() so the finally block still closes the database connection
+    process.exitCode = 1;
   } finally {
-    await prisma.$disconnect();
+    await disconnectDatabase();
   }
 }
 
 
-// CLI arguments for country code and date
-const args = process.argv.slice(2);
-const options: IScraperOptions = {};
-
-for (let i = 0; i < args.length; i += 2) {
-  switch (args[i]) {
-    case '--country':
-      options.countryCode = args[i + 1] as CountryCode;
-      break;
-    case '--event':
-      options.eventName = args[i + 1];
-      break;
-    case '--from':
-      options.fromDate = args[i + 1];
-      break;
-  }
+// CLI arguments: --country, --event, --from (validated against events.ts)
+let options: IScraperOptions;
+try {
+  options = parseScraperArgs(process.argv.slice(2));
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  console.error(USAGE);
+  process.exit(1);
 }
-
 
 main(options);

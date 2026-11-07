@@ -1,10 +1,18 @@
+# Dev image for the frontend (Vite dev server). Build context is the repo root (see docker-compose.yml)
+# so the root package-lock.json is used: `npm ci` gives reproducible installs.
 FROM node:24-slim
 
-WORKDIR /app
+WORKDIR /repo
 
-COPY package*.json ./
-RUN npm install
+# Manifests only (all workspaces, so npm ci can validate the lockfile); sources are bind-mounted
+COPY package.json package-lock.json ./
+COPY api/package.json api/
+COPY frontend/package.json frontend/
+COPY scraper/package.json scraper/
+COPY prisma/package.json prisma/
+COPY cdk/package.json cdk/
 
-COPY . .
+RUN npm ci --workspace frontend --include-workspace-root --no-audit --no-fund
 
+WORKDIR /repo/frontend
 CMD ["npm", "run", "ui", "--", "--host"]

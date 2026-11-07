@@ -1,11 +1,19 @@
+# Dev image for the API. Build context is the repo root (see docker-compose.yml) so the
+# root package-lock.json is used: `npm ci` gives reproducible installs.
 FROM node:24-slim
 
-WORKDIR /app
+WORKDIR /repo
 
-RUN apt-get update && apt-get install -y openssl
+# Manifests only (all workspaces, so npm ci can validate the lockfile); sources are bind-mounted
+COPY package.json package-lock.json ./
+COPY api/package.json api/
+COPY frontend/package.json frontend/
+COPY scraper/package.json scraper/
+COPY prisma/package.json prisma/
+COPY cdk/package.json cdk/
 
-COPY package*.json ./
-RUN npm install
-RUN npm install -g tsx
+# API dependencies plus root dev tools (tsx)
+RUN npm ci --workspace api --include-workspace-root --no-audit --no-fund
 
+WORKDIR /repo/api
 CMD ["npm", "run", "api"]

@@ -15,29 +15,31 @@ services:
       timeout: 5s
       retries: 5
 
+  # The API serves JSON files from data/ (it does not use the database)
   api:
     build:
-      context: ./api
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: api/Dockerfile.dev
     volumes:
-      - ./api:/app
-      - ./data:/app/data
-      - /app/node_modules
+      - ./api:/repo/api
+      - ./data:/repo/data
+      - /repo/api/node_modules
     ports:
       - "3001:3001"
     environment:
       - PORT=3001
       - FRONTEND_URL=http://localhost:5173
       - NODE_ENV=development
+      - DATA_DIR=/repo/data
       - DEBUG=true
-      - DATABASE_URL=postgresql://parkrun:parkrun@postgres:5432/parkrun
+
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
+      context: .
+      dockerfile: frontend/Dockerfile.dev
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./frontend:/repo/frontend
+      - /repo/frontend/node_modules
     ports:
       - "5173:5173"
     environment:

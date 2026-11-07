@@ -12,14 +12,14 @@ Data update relies on manual updates for now, as source data has to be fetched f
 **Note:** Application assumes data files are there in data bucket in correctly named files, with correct format.
 
 ## Prerequisites
-- Node.js v22 or higher
+- Node.js v22.13 or higher (v24 recommended; it matches CI and the AWS Lambda runtime)
 - npm
 - Docker
 - AWS Account
 - Route 53 domain
 
 ### Local setup
-0. Run `npm install && npm run build` from project root.
+0. Run `npm install && npm run build` from project root. The build also generates the Prisma client that the scraper uses. Generate it again (`npm run build`, or just `npm run generate -w prisma`) after a fresh install or after changing `prisma/schema.prisma`.
 1. Run `npm run db` to spin up the database.
 2. Initialize database with Prisma migrations:
    ```bash
@@ -39,7 +39,12 @@ Data update relies on manual updates for now, as source data has to be fetched f
    - `parkrun_data.json`: Event statistics 
    - `latest_date.json`: Latest event date
 
-5. Start the frontend development server:
+5. Start the API (reads the JSON files from the `data` folder, see `DATA_DIR` below):
+   ```bash
+   npm run api
+   ```
+
+6. Start the frontend development server:
    ```bash
    npm run frontend
    ```
@@ -51,7 +56,7 @@ Data update relies on manual updates for now, as source data has to be fetched f
 - AWS_ROLE_ARN (see output from oidc-role.yml)
 - AWS_ACCOUNT_ID
 As repo variable, add domain name (e.g. yourdomain.com). You need to have manually set up domain first.
-GitHub Actions job `gliech/create-github-secret-action@v1` needs PAT token with write access to repo secrets, it will save other secrets required to deploy frontend and API.
+Also add `HOSTED_ZONE_ID` as a secret. No personal access token is needed: the deploy workflows read the bucket, CloudFront distribution and API endpoint from the CloudFormation stack outputs.
 
 3. Push changes to main branch - observe pipelines triggering. Run `deploy-infra.yml` first so you have infrastructure. Then `deploy-api` and `deploy-frontend` have something to push into. You can also trigger pipelines manually and select the environment and branch you want to deploy.
 
@@ -72,7 +77,9 @@ NODE_ENV=development
 NODE_ENV=development
 PORT=3001
 FRONTEND_URL=http://localhost:5173
+DATA_DIR=../data
 ```
+`api/.env` is loaded when the API runs locally with `npm run api`. `DATA_DIR` is the folder holding `parkrun_data.json` and `latest_date.json`; relative paths resolve from the `api` folder. If unset, it defaults to `/app/data` (the Docker mount). Values set by docker-compose take precedence over `api/.env`.
 3. Create `.env` file in [`frontend`](frontend) folder:
 ```properties
 VITE_API_URL=http://localhost:3001
@@ -82,6 +89,6 @@ VITE_API_URL=http://localhost:3001
 - CDK is used only to provision infrastructure. It does not deploy application code.
 - Frontend pipeline triggers when changes are done to `frontend` folder on main branch. This gets pushed to dev environment.
 - API pipeline triggers when changes are done to `api` folder on main branch. This gets pushed to dev environment.
-- CDK pipeline uses GitHub action that writes S3 bucket and Cloudfront ID into GitHub repo secrets, which frontend deployment uses to deploy code.
+- The frontend deployment reads the S3 bucket, CloudFront distribution ID and API endpoint from the CloudFormation stack outputs of the target environment.
 - Each pull request is run through linter and unit tests (if they exist). When merging PR to main branch, linter and tests run also.
 - Pushing changes to prod needs to be done via manual action in GitHub Actions - Run each pipeline via run workflow -> main branch -> Environment to deploy -> prod. 

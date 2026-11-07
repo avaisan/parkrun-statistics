@@ -58,8 +58,12 @@ Thumbs.db
 prisma/.env
 prisma/dist/
 prisma/generated/
-prisma/migrations/*
-!prisma/migrations/*/*.sql
+# Migration folders and migration_lock.toml are committed; only loose SQL scripts at the
+# migrations root (not Prisma migrations) stay local.
+prisma/migrations/*.sql
+
+# Generated Prisma client (npm run build / npm run generate -w prisma)
+scraper/src/generated/
 
 # Optional caches
 .eslintcache

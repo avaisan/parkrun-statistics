@@ -17,7 +17,7 @@ A React-based frontend application for displaying ParkRun statistics from Nordic
 
 ## Prerequisites
 
-- Node.js v22 or later
+- Node.js v22.13 or later (v24 recommended)
 - API running either locally or in Docker
 - Source data in correct format
 
